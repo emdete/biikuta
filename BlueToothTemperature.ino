@@ -1,11 +1,8 @@
 #include <SoftwareSerial.h> // https://www.arduino.cc/en/Reference/SoftwareSerial
 #include <TimerOne.h> // 
 
+// create a "virtual" serial port/UART
 SoftwareSerial BT(10, 11);
-// creates a "virtual" serial port/UART
-// connect BT module TX to D10
-// connect BT module RX to D11
-// connect BT Vcc to 5V, GND to GND
 
 int LM35 = A0; // line where LM35 is connected
 float tempC; // temperature in celsius

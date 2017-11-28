@@ -1,0 +1,27 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="horizontal"
+	>
+
+	<de.emdete.biikuta.Measure
+		android:id="@+id/left_measure"
+		android:layout_width="0dp"
+		android:layout_height="match_parent"
+		android:layout_weight="1"
+		android:tag="L"/>
+
+	<View
+		android:layout_width="0dp"
+		android:layout_height="match_parent"
+		android:layout_weight="5"
+		android:background="#000"/>
+
+	<de.emdete.biikuta.Measure
+		android:id="@+id/right_measure"
+		android:layout_width="0dp"
+		android:layout_height="match_parent"
+		android:layout_weight="1"
+		android:tag="R"/>
+</LinearLayout>

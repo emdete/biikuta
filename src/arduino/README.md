@@ -12,9 +12,9 @@ temperature is measured with the LM35 component.
 
 ### Links
 
-[LM35HigherResolution](http://playground.arduino.cc/Main/LM35HigherResolution)
+[LM35 Higher Resolution](http://playground.arduino.cc/Main/LM35HigherResolution)
 
-[aref](http://tronixstuff.com/2013/12/12/arduino-tutorials-chapter-22-aref-pin/)
+[AREF](http://tronixstuff.com/2013/12/12/arduino-tutorials-chapter-22-aref-pin/)
 
 HC06
 ----
@@ -25,7 +25,7 @@ Data is send via bluetooth with the HC06 module.
 
 Arduino <---> Bluetooth Module
 
-![cabeling](FXO75JTI3THAGV8.MEDIUM.jpg)
+![Cabeling](FXO75JTI3THAGV8.MEDIUM.jpg)
 
 5V to Vcc
 GND to GND
@@ -40,7 +40,7 @@ PIN 1234
 
 ### Links
 
-[product information](http://tronixlabs.com/breakout-boards/bluetooth/bluetooth-to-uart-serial-wireless-adaptor/)
+[Product information](http://tronixlabs.com/breakout-boards/bluetooth/bluetooth-to-uart-serial-wireless-adaptor/)
 
 [HC06](http://www.instructables.com/id/Tutorial-Using-HC06-Bluetooth-to-Serial-Wireless-U/)
 

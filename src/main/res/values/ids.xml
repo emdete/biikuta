@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<item name="MESSAGE_DEVICE_NAME" type="id" />
+	<item name="MESSAGE_READ" type="id" />
+	<item name="MESSAGE_STATE_CHANGE" type="id" />
+	<item name="MESSAGE_TOAST" type="id" />
+	<item name="MESSAGE_WRITE" type="id" />
+	<item name="REQUEST_CONNECT_DEVICE" type="id" />
+	<item name="REQUEST_ENABLE_BT" type="id" />
+	<item name="STATE_CONNECTED" type="id" />
+	<item name="STATE_CONNECTING" type="id" />
+	<item name="STATE_NONE" type="id" />
+</resources>

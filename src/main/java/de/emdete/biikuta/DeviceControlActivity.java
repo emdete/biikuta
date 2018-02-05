@@ -23,11 +23,15 @@ import android.widget.EditText;
 import android.widget.TextView;
 import java.lang.ref.WeakReference;
 import java.util.Date;
+import java.io.File;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import de.emdete.thinstore.StoreObject;
 
 public final class DeviceControlActivity extends Activity implements Constants {
 	private BluetoothAdapter btAdapter;
@@ -37,13 +41,16 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	Measure left_measure;
 	Measure right_measure;
 	private String deviceName;
-	private double tick;
-	private double tock;
-	private double temperature;
-	private double left_force_max = 1;
-	private double right_force_max = 1;
-	private double left_force;
-	private double right_force;
+	private SQLiteOpenHelper dbHelper;
+	private static class Measurement extends StoreObject {
+		double tick;
+		double tock;
+		double temperature;
+		double left_force;
+		double right_force;
+	}
+	double left_force_max = 1;
+	double right_force_max = 1;
 
 	public static String printHex(String hex) {
 		StringBuilder sb = new StringBuilder();
@@ -123,6 +130,13 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				finish();
 			}
 		});
+		dbHelper = new SQLiteOpenHelper(getBaseContext(), "biikuta", null, 1) {
+			@Override public void onCreate(SQLiteDatabase db) {
+				U.info("create=" + StoreObject.create(db, Measurement.class));
+			}
+			@Override public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+			}
+		};
 		getActionBar().setHomeButtonEnabled(false);
 		if (savedInstanceState != null) {
 			pendingRequestEnableBt = savedInstanceState.getBoolean(SAVED_PENDING_REQUEST_ENABLE_BT);
@@ -273,32 +287,47 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	void receivedMessage(String message) {
 		U.info("receivedMessage: " + message);
-		String[] values = message.trim().split(";");
+		String[] values = message.trim().split("\t");
 		if (values.length >= 5) {
+			Measurement val = new Measurement();
 			try {
-				tick = Double.parseDouble(values[0]);
-				tock = Double.parseDouble(values[1]);
-				temperature = Double.parseDouble(values[2]);
-				left_force = Double.parseDouble(values[3]);
-				right_force = Double.parseDouble(values[4]);
+				val.tick = Double.parseDouble(values[0]);
+				val.tock = Double.parseDouble(values[1]);
+				val.temperature = Double.parseDouble(values[2]);
+				val.left_force = Double.parseDouble(values[3]);
+				val.right_force = Double.parseDouble(values[4]);
 				U.info("receivedMessage: "
-					+ ", tick=" + tick
-					+ ", tock=" + tock
-					+ ", temperature=" + temperature
-					+ ", left_force=" + left_force
-					+ ", right_force=" + right_force
+					+ ", tick=" + val.tick
+					+ ", tock=" + val.tock
+					+ ", temperature=" + val.temperature
+					+ ", left_force=" + val.left_force
+					+ ", right_force=" + val.right_force
 					);
-				if (left_force_max < left_force)
-					left_force_max = left_force;
-				if (right_force_max < right_force)
-					right_force_max = right_force;
-				left_measure.setPercentage(left_force / left_force_max * 100);
-				right_measure.setPercentage(right_force / right_force_max * 100);
+				if (val.left_force < 0)
+					val.left_force = -val.left_force;
+				if (val.right_force < 0)
+					val.right_force = -val.right_force;
+				if (left_force_max < val.left_force)
+					left_force_max = val.left_force;
+				if (right_force_max < val.right_force)
+					right_force_max = val.right_force;
+				left_measure.setPercentage(val.left_force / left_force_max * 100);
+				right_measure.setPercentage(val.right_force / right_force_max * 100);
 			}
 			catch (NumberFormatException e) {
 				left_measure.setFault();
 				right_measure.setFault();
 				U.info("receivedMessage: e=" + e, e);
+				val = null;
+			}
+			if (val != null) {
+				try {
+					SQLiteDatabase db = dbHelper.getWritableDatabase();
+					val.insert(db);
+				}
+				catch (Exception e) {
+					U.info("receivedMessage: on insert() e=" + e, e);
+				}
 			}
 		}
 		else {
@@ -380,5 +409,19 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialogBuilder.setMessage(message);
 		AlertDialog alertDialog = alertDialogBuilder.create();
 		alertDialog.show();
+	}
+
+	void export(File f) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		try {
+			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
+				Measurement val = (Measurement)item;
+				// ..
+				val.delete(db);
+			}
+		}
+		catch (Exception e) {
+			U.info("exception: e=" + e, e);
+		}
 	}
 }

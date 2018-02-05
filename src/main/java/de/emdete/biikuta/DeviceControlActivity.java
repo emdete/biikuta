@@ -32,6 +32,10 @@ import android.os.Bundle;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import de.emdete.thinstore.StoreObject;
+import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 
 public final class DeviceControlActivity extends Activity implements Constants {
 	private BluetoothAdapter btAdapter;
@@ -51,6 +55,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	}
 	double left_force_max = 1;
 	double right_force_max = 1;
+	private static final char FS = '\t';
 
 	public static String printHex(String hex) {
 		StringBuilder sb = new StringBuilder();
@@ -216,6 +221,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				}
 				return true;
 			case R.id.menu_clear:
+				exportAndClear();
 				return true;
 			case R.id.menu_send: {
 				final Intent intent = new Intent(Intent.ACTION_SEND);
@@ -352,8 +358,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			mActivity = new WeakReference<DeviceControlActivity>(target);
 		}
 
-		@Override
-		public void handleMessage(Message msg) {
+		@Override public void handleMessage(Message msg) {
 			DeviceControlActivity activity = mActivity.get();
 			if (activity != null) {
 				switch (msg.what) {
@@ -411,14 +416,36 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialog.show();
 	}
 
-	void export(File f) {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
+	void exportAndClear() {
 		try {
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			PrintWriter out = new PrintWriter(new BufferedOutputStream(getApplicationContext().openFileOutput("measures.tsv",
+				Context.MODE_WORLD_READABLE|Context.MODE_WORLD_WRITEABLE|Context.MODE_APPEND)));
+			out.print("tick");
+			out.print(FS);
+			out.print("tock");
+			out.print(FS);
+			out.print("temperature");
+			out.print(FS);
+			out.print("left_force");
+			out.print(FS);
+			out.print("right_force");
+			out.println();
 			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
 				Measurement val = (Measurement)item;
-				// ..
+				out.print(val.tick);
+				out.print(FS);
+				out.print(val.tock);
+				out.print(FS);
+				out.print(val.temperature);
+				out.print(FS);
+				out.print(val.left_force);
+				out.print(FS);
+				out.print(val.right_force);
+				out.println();
 				val.delete(db);
 			}
+			out.println();
 		}
 		catch (Exception e) {
 			U.info("exception: e=" + e, e);

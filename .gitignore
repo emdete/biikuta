@@ -1,0 +1,8 @@
+.*.sw?
+*.iml
+.idea/
+.gradle/
+data/
+/local.properties
+/build
+/captures

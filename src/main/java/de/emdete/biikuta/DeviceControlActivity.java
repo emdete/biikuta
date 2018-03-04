@@ -120,6 +120,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	private void startConnection() {
 		stopConnection();
 		String address = null;
+		int count = 0;
 		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
 		Set<BluetoothDevice> pairedDevices = btAdapter.getBondedDevices();
 		U.info("search for an HC-06");
@@ -127,10 +128,11 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			for (BluetoothDevice device : pairedDevices) {
 				if ("HC-06".equals(device.getName())) {
 					address = device.getAddress();
+					count++;
 				}
 			}
 		}
-		if (address != null) {
+		if (address != null && count == 1) {
 			U.info("found an HC-06 at address=" + address);
 			connectToDevice(address);
 		}

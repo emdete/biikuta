@@ -4,9 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -15,28 +13,18 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.TextView;
 import java.lang.ref.WeakReference;
-import java.util.Date;
 import java.io.File;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.content.Intent;
-import android.os.Bundle;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import de.emdete.thinstore.StoreObject;
 import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
-import java.io.OutputStream;
 import java.util.Set;
 
 public final class DeviceControlActivity extends Activity implements Constants {
@@ -90,7 +78,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			mHandler = new BluetoothResponseHandler(this);
 		else
 			mHandler.setTarget(this);
-		setContentView(R.layout.activity_terminal);
+		setContentView(R.layout.main);
 		left_measure = (Measure)findViewById(R.id.left_measure);
 		right_measure = (Measure)findViewById(R.id.right_measure);
 		if (isConnected() && (savedInstanceState != null)) {

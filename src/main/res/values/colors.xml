@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<color name="black" type="color">#000000</color>
-	<color name="blue" type="color">#0000dd</color>
 	<color name="green" type="color">#00ee00</color>
 	<color name="red" type="color">#ff0000</color>
-	<color name="white" type="color">#ffffff</color>
 	<color name="yellow" type="color">#ffdd00</color>
 	<color name="gray" type="color">#888888</color>
 </resources>

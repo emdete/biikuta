@@ -57,76 +57,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	double right_force_max = 1;
 	private static final char FS = '\t';
 
-	public static String printHex(String hex) {
-		StringBuilder sb = new StringBuilder();
-		int len = hex.length();
-		try {
-			for (int i = 0; i < len; i += 2) {
-				sb.append("0x").append(hex.substring(i, i + 2)).append(" ");
-			}
-		}
-		catch (NumberFormatException e) {
-			U.info("printHex NumberFormatException: " + e.getMessage());
-		}
-		catch (StringIndexOutOfBoundsException e) {
-			U.info("printHex StringIndexOutOfBoundsException: " + e.getMessage());
-		}
-		return sb.toString();
-	}
-
-	public static byte[] toHex(String hex) {
-		int len = hex.length();
-		byte[] result = new byte[len];
-		try {
-			int index = 0;
-			for (int i = 0; i < len; i += 2) {
-				result[index] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
-				index++;
-			}
-		}
-		catch (NumberFormatException e) {
-			U.info("toHex NumberFormatException: " + e.getMessage());
-		}
-		catch (StringIndexOutOfBoundsException e) {
-			U.info("toHex StringIndexOutOfBoundsException: " + e.getMessage());
-		}
-		return result;
-	}
-
-	public static byte[] concat(byte[] A, byte[] B) {
-		byte[] C = new byte[A.length + B.length];
-		System.arraycopy(A, 0, C, 0, A.length);
-		System.arraycopy(B, 0, C, A.length, B.length);
-		return C;
-	}
-
-	public static int mod(int x, int y) {
-		int result = x % y;
-		return result < 0 ? result + y : result;
-	}
-
-	public static String calcModulo256(String command) {
-		int crc = 0;
-		for (int i = 0; i < command.length(); i++) {
-			crc += (int) command.charAt(i);
-		}
-		return Integer.toHexString(mod(crc, 256));
-	}
-
-	public static String mark(String text, String color) {
-		return "<font color=" + color + ">" + text + "</font>";
-	}
-
-	public static String getPrefence(Context context, String item) {
-		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
-		return settings.getString(item, Constants.TAG);
-	}
-
-	public static boolean getBooleanPrefence(Context context, String tag) {
-		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
-		return settings.getBoolean(tag, true);
-	}
-
 	@Override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -249,7 +179,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(enableIntent, R.id.REQUEST_ENABLE_BT);
 		}
-		final String mode = getPrefence(this, getString(R.string.pref_commands_mode));
 	}
 
 	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {

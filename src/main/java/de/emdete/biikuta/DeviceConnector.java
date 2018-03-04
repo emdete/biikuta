@@ -152,10 +152,12 @@ public class DeviceConnector implements Constants {
 		ArrayList<String> result = new ArrayList<String>();
 		for (ParcelUuid uuid : uuids) {
 			String s = uuid.toString().toUpperCase();
+			U.info("found uuid=" + s);
 			boolean found = false;
 			for (Map.Entry<String, String> entry : uuidsDescriptions.entrySet()) {
 				String key = entry.getKey().toUpperCase();
 				String value = entry.getValue();
+				U.info("check value=" + value);
 				if (s.startsWith("0000" + key)) {
 					found = true;
 					result.add(value);
@@ -286,6 +288,7 @@ public class DeviceConnector implements Constants {
 		msg.setData(bundle);
 		mHandler.sendMessage(msg);
 		setState(R.id.STATE_NONE);
+		// TODO reconnect?
 	}
 
 	private class ConnectThread extends Thread {

@@ -9,13 +9,14 @@
 	<string name="pref_need_clean">pref_need_clean</string>
 	<!-- prefence keys, no translation needed -->
 	<string name="app_name">biikuta Measure</string>
-	<string name="msg_not_connected">not connected</string>
-	<string name="msg_connecting">connecting…</string>
-	<string name="msg_connected">connected</string>
-	<string name="action_bluetooth">on/off</string>
+	<string name="msg_not_connected">Stopped</string>
+	<string name="msg_connecting">Starting…</string>
+	<string name="msg_connected">Running</string>
+	<string name="action_bluetooth">Start</string>
+	<string name="action_bluetooth_off">Stop</string>
 	<string name="no_bt_support">Your device doesn\'t support bluetooth.</string>
 	<string name="empty_device_name">&lt;New device&gt;</string>
-	<string name="menu_send">Send log…</string>
+	<string name="menu_send">Send maxima</string>
 	<string name="menu_settings">Settings</string>
 	<string name="menu_clear">Clear history</string>
 	<string name="select_device">Select device</string>

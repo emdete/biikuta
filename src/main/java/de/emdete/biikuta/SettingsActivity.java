@@ -10,10 +10,8 @@ import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
 @SuppressWarnings("deprecation")
-public final class SettingsActivity extends PreferenceActivity
-		implements SharedPreferences.OnSharedPreferenceChangeListener {
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
+public final class SettingsActivity extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+	@Override public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings_activity);
 		final ActionBar bar = getActionBar();
@@ -26,8 +24,7 @@ public final class SettingsActivity extends PreferenceActivity
 		setPrefenceTitle(getString(R.string.pref_commands_ending));
 	}
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	@Override public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
 		switch (id) {
 			case android.R.id.home:
@@ -38,8 +35,7 @@ public final class SettingsActivity extends PreferenceActivity
 		}
 	}
 
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String value) {
+	@Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String value) {
 		setPrefenceTitle(value);
 	}
 

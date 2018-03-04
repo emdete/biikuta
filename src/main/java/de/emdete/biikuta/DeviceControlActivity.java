@@ -36,15 +36,19 @@ import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
+import java.io.OutputStream;
+import java.util.Set;
 
 public final class DeviceControlActivity extends Activity implements Constants {
 	private BluetoothAdapter btAdapter;
 	private boolean pendingRequestEnableBt = false;
 	private DeviceConnector connector;
 	private BluetoothResponseHandler mHandler;
-	Measure left_measure;
-	Measure right_measure;
 	private String deviceName;
+	private Measure left_measure;
+	private double left_force_max = 3000;
+	private Measure right_measure;
+	private double right_force_max = 3000;
 	private SQLiteOpenHelper dbHelper;
 	private static class Measurement extends StoreObject {
 		double tick;
@@ -53,8 +57,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		double left_force;
 		double right_force;
 	}
-	double left_force_max = 1;
-	double right_force_max = 1;
 	private static final char FS = '\t';
 
 	@Override protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +119,24 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	private void startConnection() {
 		stopConnection();
-		startActivityForResult(new Intent(this, DeviceListActivity.class), R.id.REQUEST_CONNECT_DEVICE);
+		String address = null;
+		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+		Set<BluetoothDevice> pairedDevices = btAdapter.getBondedDevices();
+		U.info("search for an HC-06");
+		if (pairedDevices != null && !pairedDevices.isEmpty()) {
+			for (BluetoothDevice device : pairedDevices) {
+				if ("HC-06".equals(device.getName())) {
+					address = device.getAddress();
+				}
+			}
+		}
+		if (address != null) {
+			U.info("found an HC-06 at address=" + address);
+			connectToDevice(address);
+		}
+		else {
+			startActivityForResult(new Intent(this, DeviceListActivity.class), R.id.REQUEST_CONNECT_DEVICE);
+		}
 	}
 
 	@Override public boolean onSearchRequested() {
@@ -141,10 +160,14 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		switch (item.getItemId()) {
 			case R.id.menu_search:
 				if (isAdapterReady()) {
-					if (isConnected())
+					if (isConnected()) {
 						stopConnection();
-					else
+						item.setTitle(R.string.action_bluetooth); // TODO: wait for event
+					}
+					else {
 						startConnection();
+						item.setTitle(R.string.action_bluetooth_off); // TODO: wait for event
+					}
 				}
 				else {
 					startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), R.id.REQUEST_ENABLE_BT);
@@ -156,7 +179,10 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			case R.id.menu_send: {
 				final Intent intent = new Intent(Intent.ACTION_SEND);
 				intent.setType("text/plain");
-				intent.putExtra(Intent.EXTRA_TEXT, ""); // TODO put in params
+				intent.putExtra(Intent.EXTRA_TEXT, "current max: "
+					+ "left_force_max=" + left_force_max/1000 + "kg, "
+					+ "right_force_max=" + right_force_max/1000 + "kg"
+					);
 				startActivity(Intent.createChooser(intent, getString(R.string.menu_send)));
 				return true;
 				}
@@ -181,15 +207,19 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		}
 	}
 
+	private void connectToDevice(String address) {
+		BluetoothDevice device = btAdapter.getRemoteDevice(address);
+		if (isAdapterReady() && (connector == null))
+			setupConnector(device);
+	}
+
 	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch (requestCode) {
 			case R.id.REQUEST_CONNECT_DEVICE:
 				if (resultCode == Activity.RESULT_OK) {
 					String address = data.getStringExtra(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-					BluetoothDevice device = btAdapter.getRemoteDevice(address);
-					if (isAdapterReady() && (connector == null))
-						setupConnector(device);
+					connectToDevice(address);
 				}
 				break;
 			case R.id.REQUEST_ENABLE_BT:
@@ -272,7 +302,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	void setDeviceName(String deviceName) {
 		this.deviceName = deviceName;
-		getActionBar().setSubtitle(deviceName);
+		//getActionBar().setSubtitle( deviceName);
 	}
 
 	private class BluetoothResponseHandler extends Handler {

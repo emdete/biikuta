@@ -57,8 +57,6 @@ public class DeviceListActivity extends Activity implements Constants {
 			}
 		}
 	};
-
-
 	private final OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
 		public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
 			// Cancel discovery because it's costly and we're about to connect
@@ -76,8 +74,7 @@ public class DeviceListActivity extends Activity implements Constants {
 		}
 	};
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	@Override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.device_list);
 		// Set default result to CANCELED, in case the user backs out
@@ -120,8 +117,7 @@ public class DeviceListActivity extends Activity implements Constants {
 		}
 	}
 
-	@Override
-	protected void onDestroy() {
+	@Override protected void onDestroy() {
 		super.onDestroy();
 		if (mBtAdapter != null) {
 			mBtAdapter.cancelDiscovery();

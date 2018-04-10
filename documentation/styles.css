@@ -1,0 +1,125 @@
+body {
+	background-color:#eee;
+	color:#222;
+	font-family:sans-serif;
+	}
+#content {
+	width: 72ex;
+	}
+#license {
+	width: 72ex;
+	background-color:#ccc;
+	text-align:left;
+	padding: 12px;
+	}
+h1, h2, h3, h4, h5 {
+	text-align:left;
+	background-color:#ccc;
+	color: #555;
+	margin-top: 1em;
+	padding: 12px;
+	}
+h1 {
+	font-family:sans-serif;
+	height: 74px;
+	line-height: 76px;
+	font-weight: bold;
+	color: #555;
+	}
+p, div, pre, td {
+	font-family:sans-serif;
+	text-align:left;
+	}
+p > img {
+	width: 72ex;
+	}
+a > img {
+	width: 72ex;
+	}
+table {
+	border-collapse:collapse;
+	border-spacing:1px;
+	border:thin solid #ddd;
+	caption-side:top;
+	width:100%;
+	}
+th {
+	background-color:#f8f8f8;
+	border:thin solid #ddd;
+	empty-cells:show;
+	text-align:right;
+	vertical-align: top;
+	}
+td {
+	border:thin solid #ddd;
+	empty-cells:show;
+	vertical-align: top;
+	}
+input {
+	}
+.toggler:after {
+	/*content:url(toggler.gif)" ";*/
+	content:" \25bc ";
+	}
+.toggler {
+	cursor:pointer;
+	}
+.folded {
+	display:none;
+	}
+.odd_in {
+	background-color:#eef;
+	}
+.even_in {
+	background-color:#aaf;
+	}
+.odd_out {
+	background-color:#efe;
+	}
+.even_out {
+	background-color:#afa;
+	}
+.odd {
+	background-color:#fff;
+	}
+.even {
+	background-color:#cbb;
+	}
+a.tooltip,
+a.tooltip:link,
+a.tooltip:visited,
+a.tooltip:active {
+	position:relative;
+	text-decoration:none;
+	font-style:bold;
+	border-bottom:0px dotted #111;
+	color:#111;
+	}
+a.tooltip:hover {
+	background:transparent;
+	z-index:100;
+	}
+a.tooltip span {
+	display:none;
+	text-decoration:none;
+	border:1px solid;
+	border-color:#bbb #bbb #bbb #bbb;
+	border-left:1em solid #bbb;
+	}
+a.in span {
+	border-left:1em solid #009;
+	}
+a.out span {
+	border-left:1em solid #090;
+	}
+a.tooltip:hover span {
+	background:#ccc;
+	color:#000;
+	display:block;
+	font-style:normal;
+	left:0;
+	position:absolute;
+	top:2em;
+	width:30em;
+	z-index:100;
+	}

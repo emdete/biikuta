@@ -41,6 +41,7 @@ import java.util.Set;
 
 public final class DeviceControlActivity extends Activity implements Constants {
 	private BluetoothAdapter btAdapter;
+	private Menu menu = null;
 	private boolean pendingRequestEnableBt = false;
 	private DeviceConnector connector;
 	private BluetoothResponseHandler mHandler;
@@ -95,8 +96,9 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		if (isConnected() && (savedInstanceState != null)) {
 			setDeviceName(savedInstanceState.getString(DEVICE_NAME));
 		}
-		else
+		else {
 			getActionBar().setSubtitle(getString(R.string.msg_not_connected));
+		}
 	}
 
 	@Override protected void onSaveInstanceState(Bundle outState) {
@@ -150,10 +152,16 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.device_control_activity, menu);
 		final MenuItem bluetooth = menu.findItem(R.id.menu_search);
+		this.menu = menu;
 		if (bluetooth != null) {
-			bluetooth.setIcon(this.isConnected() ?
-				R.drawable.ic_action_device_bluetooth_connected :
-				R.drawable.ic_action_device_bluetooth);
+			if (this.isConnected()) {
+				bluetooth.setIcon(R.drawable.ic_action_device_bluetooth_connected);
+				menu.findItem(R.id.menu_search).setTitle(R.string.action_bluetooth_off);
+			}
+			else {
+				bluetooth.setIcon(R.drawable.ic_action_device_bluetooth);
+				menu.findItem(R.id.menu_search).setTitle(R.string.action_bluetooth);
+			}
 		}
 		return true;
 	}
@@ -164,11 +172,9 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				if (isAdapterReady()) {
 					if (isConnected()) {
 						stopConnection();
-						item.setTitle(R.string.action_bluetooth); // TODO: wait for event
 					}
 					else {
 						startConnection();
-						item.setTitle(R.string.action_bluetooth_off); // TODO: wait for event
 					}
 				}
 				else {
@@ -211,8 +217,9 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	private void connectToDevice(String address) {
 		BluetoothDevice device = btAdapter.getRemoteDevice(address);
-		if (isAdapterReady() && (connector == null))
+		if (isAdapterReady() && connector == null) {
 			setupConnector(device);
+		}
 	}
 
 	@Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {

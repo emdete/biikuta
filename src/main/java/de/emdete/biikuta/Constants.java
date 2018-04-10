@@ -10,5 +10,5 @@ public interface Constants {
 	static final String EXTRA_DEVICE_ADDRESS = "device_address";
 	static final String LOG = "LOG";
 	static final String SAVED_PENDING_REQUEST_ENABLE_BT = "PENDING_REQUEST_ENABLE_BT";
-	static final String TAG = "biikuta";
+	static final String TAG = "de.emdete.biikuta";
 }

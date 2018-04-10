@@ -38,7 +38,8 @@ import java.util.WeakHashMap;
  */
 public class StoreObject {
 	private static final SimpleDateFormat ISO_DATE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-	private static final String TAG = "de.emdete.biikuta";
+	private static final String TAG = de.emdete.biikuta.Constants.TAG;
+
 	/**
 	* supported java datatypes. most native types plus string and date.
 	*/

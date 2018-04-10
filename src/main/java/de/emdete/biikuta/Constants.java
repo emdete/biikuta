@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 
 public interface Constants {
 	static final SimpleDateFormat timeformat = new SimpleDateFormat("HH:mm:ss.SSS");
+	static final SimpleDateFormat FULL_ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SS");
 	static final String CRC_BAD = "#FF0000";
 	static final String CRC_OK = "#FFFF00";
 	static final String DEVICE_NAME = "DEVICE_NAME";

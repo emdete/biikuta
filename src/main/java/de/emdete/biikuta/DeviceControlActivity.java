@@ -46,6 +46,62 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		double temperature;
 		double left_force;
 		double right_force;
+		Measurement(String message) throws Exception {
+			String[] values = message.trim().split("\t");
+			if (values.length < 5) {
+				throw new Exception("receivedMessage: less than 5 elements length=" + values.length);
+			}
+			this.tick = Double.parseDouble(values[0]);
+			this.tock = Double.parseDouble(values[1]);
+			this.temperature = Double.parseDouble(values[2]);
+			this.left_force = Double.parseDouble(values[3]);
+			this.right_force = Double.parseDouble(values[4]);
+			U.info("receivedMessage: " + this);
+			if (this.left_force < 0) {
+				this.left_force = -this.left_force;
+			}
+			if (this.right_force < 0) {
+				this.right_force = -this.right_force;
+			}
+		}
+
+		public String toString() {
+			return "Measurement"
+				+ ", tick=" + this.tick
+				+ ", tock=" + this.tock
+				+ ", temperature=" + this.temperature
+				+ ", left_force=" + this.left_force
+				+ ", right_force=" + this.right_force
+				;
+		}
+
+		static void exportAndClear(SQLiteDatabase db, PrintWriter out ) throws Exception {
+			out.print("tick");
+			out.print(FS);
+			out.print("tock");
+			out.print(FS);
+			out.print("temperature");
+			out.print(FS);
+			out.print("left_force");
+			out.print(FS);
+			out.print("right_force");
+			out.println();
+			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
+				Measurement val = (Measurement)item;
+				out.print(val.tick);
+				out.print(FS);
+				out.print(val.tock);
+				out.print(FS);
+				out.print(val.temperature);
+				out.print(FS);
+				out.print(val.left_force);
+				out.print(FS);
+				out.print(val.right_force);
+				out.println();
+				val.delete(db);
+			}
+			out.println();
+		}
 	}
 	private static final char FS = '\t';
 
@@ -171,7 +227,18 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				}
 				return true;
 			case R.id.menu_clear:
-				exportAndClear();
+				try {
+					File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+					path.mkdirs();
+					File file = new File(path, FULL_ISO_DATE_FORMAT.format(new java.util.Date(System.currentTimeMillis())) + ".tsv");
+					U.info("exportAndClear: file=" + file);
+					PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)));
+					Measurement.exportAndClear(dbHelper.getWritableDatabase(), out);
+					showAlertDialog("Exported to " + file);
+				}
+				catch (Exception e) {
+					U.info("exception: e=" + e, e);
+				}
 				return true;
 			case R.id.menu_send: {
 				final Intent intent = new Intent(Intent.ACTION_SEND);
@@ -250,51 +317,20 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	void receivedMessage(String message) {
 		U.info("receivedMessage: " + message);
-		String[] values = message.trim().split("\t");
-		if (values.length >= 5) {
-			Measurement val = new Measurement();
-			try {
-				val.tick = Double.parseDouble(values[0]);
-				val.tock = Double.parseDouble(values[1]);
-				val.temperature = Double.parseDouble(values[2]);
-				val.left_force = Double.parseDouble(values[3]);
-				val.right_force = Double.parseDouble(values[4]);
-				U.info("receivedMessage: "
-					+ ", tick=" + val.tick
-					+ ", tock=" + val.tock
-					+ ", temperature=" + val.temperature
-					+ ", left_force=" + val.left_force
-					+ ", right_force=" + val.right_force
-					);
-				if (val.left_force < 0)
-					val.left_force = -val.left_force;
-				if (val.right_force < 0)
-					val.right_force = -val.right_force;
-				if (left_force_max < val.left_force)
-					left_force_max = val.left_force;
-				if (right_force_max < val.right_force)
-					right_force_max = val.right_force;
-				left_measure.setPercentage(val.left_force / left_force_max * 100);
-				right_measure.setPercentage(val.right_force / right_force_max * 100);
-			}
-			catch (NumberFormatException e) {
-				left_measure.setFault();
-				right_measure.setFault();
-				U.info("receivedMessage: e=" + e, e);
-				val = null;
-			}
-			if (val != null) {
-				try {
-					SQLiteDatabase db = dbHelper.getWritableDatabase();
-					val.insert(db);
-				}
-				catch (Exception e) {
-					U.info("receivedMessage: on insert() e=" + e, e);
-				}
-			}
+		try {
+			Measurement val = new Measurement(message);
+			if (left_force_max < val.left_force)
+				left_force_max = val.left_force;
+			if (right_force_max < val.right_force)
+				right_force_max = val.right_force;
+			left_measure.setPercentage(val.left_force / left_force_max * 100);
+			right_measure.setPercentage(val.right_force / right_force_max * 100);
+			val.insert(dbHelper.getWritableDatabase());
 		}
-		else {
-			U.info("receivedMessage: less than 5 elements length=" + values.length);
+		catch (Exception e) {
+			left_measure.setFault();
+			right_measure.setFault();
+			U.info("receivedMessage: e=" + e, e);
 		}
 	}
 
@@ -371,41 +407,5 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialogBuilder.setMessage(message);
 		AlertDialog alertDialog = alertDialogBuilder.create();
 		alertDialog.show();
-	}
-
-	void exportAndClear() {
-		try {
-			SQLiteDatabase db = dbHelper.getWritableDatabase();
-			PrintWriter out = new PrintWriter(new BufferedOutputStream(getApplicationContext().openFileOutput("measures.tsv",
-				Context.MODE_WORLD_READABLE|Context.MODE_WORLD_WRITEABLE|Context.MODE_APPEND)));
-			out.print("tick");
-			out.print(FS);
-			out.print("tock");
-			out.print(FS);
-			out.print("temperature");
-			out.print(FS);
-			out.print("left_force");
-			out.print(FS);
-			out.print("right_force");
-			out.println();
-			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
-				Measurement val = (Measurement)item;
-				out.print(val.tick);
-				out.print(FS);
-				out.print(val.tock);
-				out.print(FS);
-				out.print(val.temperature);
-				out.print(FS);
-				out.print(val.left_force);
-				out.print(FS);
-				out.print(val.right_force);
-				out.println();
-				val.delete(db);
-			}
-			out.println();
-		}
-		catch (Exception e) {
-			U.info("exception: e=" + e, e);
-		}
 	}
 }

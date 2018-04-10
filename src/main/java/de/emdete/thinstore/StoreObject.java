@@ -38,10 +38,10 @@ import java.util.WeakHashMap;
  */
 public class StoreObject {
 	private static final SimpleDateFormat ISO_DATE = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-	private static final String TAG = "de.emdete";
+	private static final String TAG = "de.emdete.biikuta";
 	/**
-	 * supported java datatypes. most native types plus string and date.
-	 */
+	* supported java datatypes. most native types plus string and date.
+	*/
 	private static final Set<Class> SUPPORTED_TYPES = new HashSet<Class>(Arrays.asList(new Class[] {
 		String.class,
 		Date.class,
@@ -59,14 +59,14 @@ public class StoreObject {
 	}
 
 	/**
-	 * primary key for all StoreObject
-	 */
+	* primary key for all StoreObject
+	*/
 	protected long id = -1;
 
 	/**
-	 * method to determine a list of fields that will be mapped to a sql table
-	 * column. the result will be cached in a WeakHashMap.
-	 */
+	* method to determine a list of fields that will be mapped to a sql table
+	* column. the result will be cached in a WeakHashMap.
+	*/
 	static Field[] storedFields(Class clazz) {
 		Field[] fields = FIELDS_CACHE.get(clazz);
 		if (fields == null) {
@@ -100,8 +100,8 @@ public class StoreObject {
 	}
 
 	/**
-	 *
-	 */
+	*
+	*/
 	static String[] getProjection(Class clazz) {
 		int i = 0;
 		Field[] fields = storedFields(clazz);
@@ -114,8 +114,8 @@ public class StoreObject {
 	}
 
 	/**
-	 *
-	 */
+	*
+	*/
 	ContentValues toContentValues(ContentValues contentValues) throws Exception {
 		for (Field field: storedFields(this.getClass())) {
 			Class clazz = field.getType();
@@ -158,8 +158,8 @@ public class StoreObject {
 	}
 
 	/**
-	 *
-	 */
+	*
+	*/
 	StoreObject fromCursor(Cursor cursor) throws Exception {
 		Field[] fields = storedFields(this.getClass());
 		for (int i=0;i<fields.length;i++) {
@@ -189,16 +189,16 @@ public class StoreObject {
 	}
 
 	/**
-	 *
-	 */
+	*
+	*/
 	protected StoreObject add(SQLiteDatabase db, List list, StoreObject item) throws Exception {
 		list.add(item);
 		return item.insert(db);
 	}
 
 	/**
-	 * create the table in the database.
-	 */
+	* create the table in the database.
+	*/
 	public static String create(SQLiteDatabase db, Class clazz) {
 		String ret = "CREATE TABLE ";
 		ret += clazz.getSimpleName();
@@ -213,15 +213,15 @@ public class StoreObject {
 			}
 		}
 		ret += ")";
-        if (db != null) {
+		if (db != null) {
 			db.execSQL(ret);
 		}
 		return ret;
 	}
 
 	/**
-	 * insert this record into the database.
-	 */
+	* insert this record into the database.
+	*/
 	public StoreObject insert(SQLiteDatabase db) throws Exception {
 		if (id >= 0) {
 			throw new Exception("id=" + id);
@@ -232,11 +232,11 @@ public class StoreObject {
 	}
 
 	/**
-	 * selects records from the database. mainly intern usage, use query object
-	 * to control where and order filters.
-	 */
+	* selects records from the database. mainly intern usage, use query object
+	* to control where and order filters.
+	*/
 	public static List<StoreObject> select(SQLiteDatabase db, Class clazz, String where, String[] values, String order) throws Exception {
-        Cursor cursor = db.query(clazz.getSimpleName(),
+		Cursor cursor = db.query(clazz.getSimpleName(),
 			getProjection(clazz),
 			where, // where
 			values, // values
@@ -251,23 +251,23 @@ public class StoreObject {
 	}
 
 	/**
-	 * select records from the database. all records for one class will be derived.
-	 */
+	* select records from the database. all records for one class will be derived.
+	*/
 	public static List<StoreObject> select(SQLiteDatabase db, Class clazz) throws Exception {
-        return select(db, clazz, null, null, "id");
+		return select(db, clazz, null, null, "id");
 	}
 
 	/**
-	 * start a query. creates a query objects where filter can be applied and
-	 * finally a fetch can be done.
-	 */
+	* start a query. creates a query objects where filter can be applied and
+	* finally a fetch can be done.
+	*/
 	public static Query query(SQLiteDatabase db, Class clazz) throws Exception {
 		return new Query(db, clazz);
 	}
 
 	/**
-	 * query object that holds the data to finally issue the query.
-	 */
+	* query object that holds the data to finally issue the query.
+	*/
 	public static class Query {
 		SQLiteDatabase db;
 		Class clazz;
@@ -340,37 +340,37 @@ public class StoreObject {
 	}
 
 	/**
-	 * update this record in the database.
-	 */
+	* update this record in the database.
+	*/
 	public StoreObject update(SQLiteDatabase db) throws Exception {
 		if (id < 0) {
 			throw new Exception("id=" + id);
 		}
-        if (db.update(this.getClass().getSimpleName(), toContentValues(new ContentValues()), ID_WHERE, new String[]{String.valueOf(id)}) != 1) {
+		if (db.update(this.getClass().getSimpleName(), toContentValues(new ContentValues()), ID_WHERE, new String[]{String.valueOf(id)}) != 1) {
 			throw new Exception("did not update 1");
 		}
 		return this;
 	}
 
 	/**
-	 * delete this record from the database.
-	 */
+	* delete this record from the database.
+	*/
 	public void delete(SQLiteDatabase db) throws Exception {
 		if (id < 0) {
 			throw new Exception("id=" + id);
 		}
-        if (db.delete(this.getClass().getSimpleName(), ID_WHERE, new String[]{String.valueOf(id)}) != 1) {
+		if (db.delete(this.getClass().getSimpleName(), ID_WHERE, new String[]{String.valueOf(id)}) != 1) {
 			throw new Exception("did not delete 1");
 		}
 	}
 
 	/**
-	 * drop the table from the database.
-	 */
+	* drop the table from the database.
+	*/
 	public static String drop(SQLiteDatabase db, Class clazz) {
 		String ret = "DROP TABLE ";
 		ret += clazz.getSimpleName();
-        if (db != null) {
+		if (db != null) {
 			db.execSQL(ret);
 		}
 		return ret;

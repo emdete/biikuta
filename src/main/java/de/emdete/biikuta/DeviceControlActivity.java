@@ -2,11 +2,15 @@ package de.emdete.biikuta;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -14,18 +18,14 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.view.KeyEvent;
-import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
-import java.lang.ref.WeakReference;
-import java.io.File;
-import android.app.AlertDialog;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import de.emdete.thinstore.StoreObject;
-import java.io.PrintWriter;
-import java.io.FileOutputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.util.Set;
 
 public final class DeviceControlActivity extends Activity implements Constants {
@@ -75,7 +75,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				;
 		}
 
-		static void exportAndClear(SQLiteDatabase db, PrintWriter out ) throws Exception {
+		static void exportAndClear(SQLiteDatabase db, PrintWriter out) throws Exception {
 			out.print("tick");
 			out.print(FS);
 			out.print("tock");
@@ -103,7 +103,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			out.println();
 		}
 	}
-	private static final char FS = '\t';
 
 	@Override protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -138,7 +137,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		setContentView(R.layout.main);
 		left_measure = (Measure)findViewById(R.id.left_measure);
 		right_measure = (Measure)findViewById(R.id.right_measure);
-		if (isConnected() && (savedInstanceState != null)) {
+		if (isConnected() && savedInstanceState != null) {
 			setDeviceName(savedInstanceState.getString(DEVICE_NAME));
 		}
 		else {
@@ -199,7 +198,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		final MenuItem bluetooth = menu.findItem(R.id.menu_search);
 		this.menu = menu;
 		if (bluetooth != null) {
-			if (this.isConnected()) {
+			if (isConnected()) {
 				bluetooth.setIcon(R.drawable.ic_action_device_bluetooth_connected);
 				menu.findItem(R.id.menu_search).setTitle(R.string.action_bluetooth_off);
 			}
@@ -262,9 +261,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	@Override public void onStart() {
 		super.onStart();
-		if (btAdapter == null)
-			return;
-		if (!btAdapter.isEnabled() && !pendingRequestEnableBt) {
+		if (btAdapter != null && !btAdapter.isEnabled() && !pendingRequestEnableBt) {
 			pendingRequestEnableBt = true;
 			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(enableIntent, R.id.REQUEST_ENABLE_BT);
@@ -356,17 +353,24 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			if (activity != null) {
 				switch (msg.what) {
 					case R.id.MESSAGE_STATE_CHANGE:
-						U.info("MESSAGE_STATE_CHANGE: " + msg.arg1);
 						final ActionBar bar = activity.getActionBar();
 						switch (msg.arg1) {
 							case R.id.STATE_CONNECTED:
+								U.info("MESSAGE_STATE_CHANGE: STATE_CONNECTED");
 								bar.setSubtitle(getString(R.string.msg_connected));
 								break;
 							case R.id.STATE_CONNECTING:
+								U.info("MESSAGE_STATE_CHANGE: STATE_CONNECTING");
 								bar.setSubtitle(getString(R.string.msg_connecting));
 								break;
 							case R.id.STATE_NONE:
+								U.info("MESSAGE_STATE_CHANGE: STATE_NONE");
 								bar.setSubtitle(getString(R.string.msg_not_connected));
+								left_measure.setFault();
+								right_measure.setFault();
+								break;
+							default:
+								U.info("MESSAGE_STATE_CHANGE: " + msg.arg1);
 								break;
 						}
 						activity.invalidateOptionsMenu();

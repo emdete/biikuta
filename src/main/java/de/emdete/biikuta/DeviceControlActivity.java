@@ -1,13 +1,21 @@
 package de.emdete.biikuta;
 
+import android.os.Vibrator;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.media.ToneGenerator;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -133,7 +141,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		}
 		btAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (btAdapter == null) {
-			final String no_bluetooth = getString(R.string.no_bt_support);
+			String no_bluetooth = getString(R.string.no_bt_support);
 			showAlertDialog(no_bluetooth);
 			U.info(no_bluetooth);
 		}
@@ -273,6 +281,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			pendingRequestEnableBt = true;
 			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(enableIntent, R.id.REQUEST_ENABLE_BT);
+			left_measure.setPercentage(0);
+			right_measure.setPercentage(0);
 		}
 	}
 
@@ -376,6 +386,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 								bar.setSubtitle(getString(R.string.msg_not_connected));
 								left_measure.setFault();
 								right_measure.setFault();
+								playSound();
 								break;
 							default:
 								U.info("unknown MESSAGE_STATE_CHANGE: " + msg.arg1);
@@ -422,5 +433,43 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialogBuilder.setMessage(message);
 		AlertDialog alertDialog = alertDialogBuilder.create();
 		alertDialog.show();
+	}
+
+	public void playSound() {
+		try {
+			if (false) {
+				Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+				MediaPlayer mMediaPlayer = new MediaPlayer();
+				mMediaPlayer.setDataSource(getApplicationContext(), soundUri);
+				final AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+				if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
+					mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+					mMediaPlayer.setLooping(true);
+					mMediaPlayer.prepare();
+					mMediaPlayer.start();
+				}
+			}
+			else if (false) {
+				Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+				Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+				r.play();
+			}
+			else if (true) {
+				Vibrator v = (Vibrator)getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+				v.vibrate(400);
+				ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
+				tg.startTone(
+					ToneGenerator.TONE_PROP_BEEP
+					//ToneGenerator.TONE_PROP_BEEP2
+					//ToneGenerator.TONE_PROP_ACK
+					//ToneGenerator.TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
+					//,200
+					);
+			}
+			U.info("sound played");
+		}
+		catch (Exception e) {
+			U.info("exception: e=" + e, e);
+		}
 	}
 }

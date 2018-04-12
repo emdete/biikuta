@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -14,10 +13,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.text.InputFilter;
-import android.text.Spanned;
-import android.text.method.ScrollingMovementMethod;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import de.emdete.thinstore.StoreObject;
@@ -26,31 +21,39 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
+import java.util.Date;
 import java.util.Set;
 
 public final class DeviceControlActivity extends Activity implements Constants {
-	private BluetoothAdapter btAdapter;
+	private BluetoothAdapter btAdapter = null;
+	private BluetoothResponseHandler mHandler = null;
+	private DeviceConnector connector = null;
+	private Measure left_measure = null;
+	private Measure right_measure = null;
 	private Menu menu = null;
+	private SQLiteOpenHelper dbHelper = null;
+	private String deviceName = null;
 	private boolean pendingRequestEnableBt = false;
-	private DeviceConnector connector;
-	private BluetoothResponseHandler mHandler;
-	private String deviceName;
-	private Measure left_measure;
 	private double left_force_max = 3000;
-	private Measure right_measure;
 	private double right_force_max = 3000;
-	private SQLiteOpenHelper dbHelper;
-	private static class Measurement extends StoreObject {
+
+	public static class Measurement extends StoreObject {
+		long timestamp;
 		double tick;
 		double tock;
 		double temperature;
 		double left_force;
 		double right_force;
-		Measurement(String message) throws Exception {
+
+		public Measurement() throws Exception {
+		}
+
+		public Measurement(String message) throws Exception {
 			String[] values = message.trim().split("\t");
 			if (values.length < 5) {
 				throw new Exception("receivedMessage: less than 5 elements length=" + values.length);
 			}
+			this.timestamp = System.currentTimeMillis();
 			this.tick = Double.parseDouble(values[0]);
 			this.tock = Double.parseDouble(values[1]);
 			this.temperature = Double.parseDouble(values[2]);
@@ -67,6 +70,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 		public String toString() {
 			return "Measurement"
+				+ ", timestamp=" + FULL_ISO_DATE_FORMAT.format(new Date(this.timestamp))
 				+ ", tick=" + this.tick
 				+ ", tock=" + this.tock
 				+ ", temperature=" + this.temperature
@@ -76,6 +80,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		}
 
 		static void exportAndClear(SQLiteDatabase db, PrintWriter out) throws Exception {
+			out.print("timestamp");
+			out.print(FS);
 			out.print("tick");
 			out.print(FS);
 			out.print("tock");
@@ -88,6 +94,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			out.println();
 			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
 				Measurement val = (Measurement)item;
+				out.print(FULL_ISO_DATE_FORMAT.format(new Date(val.timestamp)));
+				out.print(FS);
 				out.print(val.tick);
 				out.print(FS);
 				out.print(val.tock);
@@ -195,16 +203,16 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	@Override public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.device_control_activity, menu);
-		final MenuItem bluetooth = menu.findItem(R.id.menu_search);
+		final MenuItem bluetooth = menu.findItem(R.id.menu_start);
 		this.menu = menu;
 		if (bluetooth != null) {
 			if (isConnected()) {
 				bluetooth.setIcon(R.drawable.ic_action_device_bluetooth_connected);
-				menu.findItem(R.id.menu_search).setTitle(R.string.action_bluetooth_off);
+				menu.findItem(R.id.menu_start).setTitle(R.string.action_bluetooth_off);
 			}
 			else {
 				bluetooth.setIcon(R.drawable.ic_action_device_bluetooth);
-				menu.findItem(R.id.menu_search).setTitle(R.string.action_bluetooth);
+				menu.findItem(R.id.menu_start).setTitle(R.string.action_bluetooth);
 			}
 		}
 		return true;
@@ -212,7 +220,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	@Override public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.menu_search:
+			case R.id.menu_start:
 				if (isAdapterReady()) {
 					if (isConnected()) {
 						stopConnection();
@@ -225,7 +233,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), R.id.REQUEST_ENABLE_BT);
 				}
 				return true;
-			case R.id.menu_clear:
+			case R.id.menu_export:
 				try {
 					File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
 					path.mkdirs();
@@ -370,7 +378,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 								right_measure.setFault();
 								break;
 							default:
-								U.info("MESSAGE_STATE_CHANGE: " + msg.arg1);
+								U.info("unknown MESSAGE_STATE_CHANGE: " + msg.arg1);
 								break;
 						}
 						activity.invalidateOptionsMenu();
@@ -387,6 +395,9 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					case R.id.MESSAGE_WRITE:
 						break;
 					case R.id.MESSAGE_TOAST:
+						break;
+					default:
+						U.info("unknown message=" + msg.what);
 						break;
 				}
 			}

@@ -334,7 +334,14 @@ Es stellt sich heraus, daß die Steckverbindung keine gute Idee es, der Kontakt
 ist scheinbar nicht gut genug. Die Messung wird durch den Übergangs-Widerstand
 beeinflusst.
 
-## Rechtliches
+## Verweise
+
+### Pferdeheilkunde 22 (2006)
+
+Folgenden Artikel fand ich zum Thema: [Der Einfluss von Zügel und
+Gebiss...](20060512.pdf).
+
+### Patent (2008)
 
 Die naheliegende Idee, Zügelkräfte zu messen, die Daten per Funk zu Übertragen
 und auch weitere Messwerte (Schenkelkräfte, Gewichtseinwirkung, Kraft auf den
@@ -353,6 +360,19 @@ Pferden](https://www.cavallo.de/training-fuers-pferd/zuegelmessung-pferde-wuensc
 vom 15. Februar 2015. Auch hier werden aber Biegesensoren eingesetzt. Darin
 erwähnen sie eine Zügelmessung die 10 Jahre vorher stattgefunden hat, also weit
 vor dem Patenteintrag.
+
+### Zack!
+
+Eine einmalige Messhilfe bietet [Swingtree](http://www.swingtree.de/):
+
+[![Zack!](IMG_20180408_194555.jpg)](IMG_20180408_194555.jpg)
+
+Die Messtreiefen sind allerdings zerstört, wenn die Kraft überschritten wurde.
+
+### Bachelor
+
+Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
+Zügelkräfte messen.
 
 ## Urheber
 

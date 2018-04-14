@@ -44,6 +44,10 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	private boolean pendingRequestEnableBt = false;
 	private double left_force_max = 3000;
 	private double right_force_max = 3000;
+	private Vibrator vibrator = null;
+	private ToneGenerator toneGenerator = null;
+	private long lastBeep = -1l;
+	private int beepPoints = 0;
 
 	public static class Measurement extends StoreObject {
 		long timestamp;
@@ -159,6 +163,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		else {
 			getActionBar().setSubtitle(getString(R.string.msg_not_connected));
 		}
+		vibrator = (Vibrator)getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+		toneGenerator = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
 	}
 
 	@Override protected void onSaveInstanceState(Bundle outState) {
@@ -181,6 +187,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	private void startConnection() {
 		stopConnection();
+		left_measure.setPercentage(0);
+		right_measure.setPercentage(0);
 		String address = null;
 		int count = 0;
 		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -248,7 +256,12 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					File file = new File(path, FULL_ISO_DATE_FORMAT.format(new java.util.Date(System.currentTimeMillis())) + ".tsv");
 					U.info("exportAndClear: file=" + file);
 					PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)));
-					Measurement.exportAndClear(dbHelper.getWritableDatabase(), out);
+					try {
+						Measurement.exportAndClear(dbHelper.getWritableDatabase(), out);
+					}
+					finally {
+						out.close();
+					}
 					showAlertDialog("Exported to " + file);
 				}
 				catch (Exception e) {
@@ -281,8 +294,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			pendingRequestEnableBt = true;
 			Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(enableIntent, R.id.REQUEST_ENABLE_BT);
-			left_measure.setPercentage(0);
-			right_measure.setPercentage(0);
 		}
 	}
 
@@ -340,6 +351,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				right_force_max = val.right_force;
 			left_measure.setPercentage(val.left_force / left_force_max * 100);
 			right_measure.setPercentage(val.right_force / right_force_max * 100);
+			playSound(Math.max(val.left_force, val.right_force));
 			val.insert(dbHelper.getWritableDatabase());
 		}
 		catch (Exception e) {
@@ -386,7 +398,6 @@ public final class DeviceControlActivity extends Activity implements Constants {
 								bar.setSubtitle(getString(R.string.msg_not_connected));
 								left_measure.setFault();
 								right_measure.setFault();
-								playSound();
 								break;
 							default:
 								U.info("unknown MESSAGE_STATE_CHANGE: " + msg.arg1);
@@ -435,38 +446,39 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialog.show();
 	}
 
-	public void playSound() {
+	public void playSound(double max) {
 		try {
-			if (false) {
-				Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-				MediaPlayer mMediaPlayer = new MediaPlayer();
-				mMediaPlayer.setDataSource(getApplicationContext(), soundUri);
-				final AudioManager audioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-				if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
-					mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
-					mMediaPlayer.setLooping(true);
-					mMediaPlayer.prepare();
-					mMediaPlayer.start();
+			// beep point calc
+			if (max > 1200.) {
+				beepPoints += (int)((max - 1200.) / 800.);
+			}
+			else {
+				beepPoints -= 4;
+			}
+			if (beepPoints < 0) {
+				beepPoints = 0;
+			}
+			if (beepPoints >= 8) {
+				long lastBeep = System.currentTimeMillis();
+				if (lastBeep - this.lastBeep > 800) { // dont beep too often
+					vibrator.vibrate(400);
+					toneGenerator.startTone(
+						beepPoints <= 10?
+						ToneGenerator.TONE_PROP_ACK:
+						ToneGenerator.TONE_SUP_ERROR
+						, 400
+						//no:
+						//ToneGenerator.TONE_PROP_PROMPT
+						//ToneGenerator.TONE_PROP_NACK
+						//ToneGenerator.TONE_PROP_BEEP
+						//ToneGenerator.TONE_PROP_BEEP2
+						//ToneGenerator.TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
+						);
+					U.info("sound played");
+					this.lastBeep = lastBeep;
 				}
+				beepPoints = 0;
 			}
-			else if (false) {
-				Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-				Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-				r.play();
-			}
-			else if (true) {
-				Vibrator v = (Vibrator)getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
-				v.vibrate(400);
-				ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME);
-				tg.startTone(
-					ToneGenerator.TONE_PROP_BEEP
-					//ToneGenerator.TONE_PROP_BEEP2
-					//ToneGenerator.TONE_PROP_ACK
-					//ToneGenerator.TONE_CDMA_KEYPAD_VOLUME_KEY_LITE
-					//,200
-					);
-			}
-			U.info("sound played");
 		}
 		catch (Exception e) {
 			U.info("exception: e=" + e, e);

@@ -91,36 +91,25 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				;
 		}
 
-		static void exportAndClear(SQLiteDatabase db, PrintWriter out) throws Exception {
-			out.print("timestamp");
-			out.print(FS);
-			out.print("tick");
-			out.print(FS);
-			out.print("tock");
-			out.print(FS);
-			out.print("temperature");
-			out.print(FS);
-			out.print("left_force");
-			out.print(FS);
-			out.print("right_force");
-			out.println();
+		static void exportAndClear(final SQLiteDatabase db, final PrintWriter out) throws Exception {
+			out.println(
+				"timestamp" + FS +
+				"tick" + FS +
+				"tock" + FS +
+				"temperature" + FS +
+				"left_force" + FS +
+				"right_force");
 			for (StoreObject item: StoreObject.select(db, Measurement.class)) {
-				Measurement val = (Measurement)item;
-				out.print(FULL_ISO_DATE_FORMAT.format(new Date(val.timestamp)));
-				out.print(FS);
-				out.print(val.tick);
-				out.print(FS);
-				out.print(val.tock);
-				out.print(FS);
-				out.print(val.temperature);
-				out.print(FS);
-				out.print(val.left_force);
-				out.print(FS);
-				out.print(val.right_force);
-				out.println();
+				final Measurement val = (Measurement)item;
+				out.println(
+					FULL_ISO_DATE_FORMAT.format(new Date(val.timestamp)) + FS +
+					val.tick + FS +
+					val.tock + FS +
+					val.temperature + FS +
+					val.left_force + FS +
+					val.right_force);
 				val.delete(db);
 			}
-			out.println();
 		}
 	}
 
@@ -236,7 +225,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 
 	@Override public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-			case R.id.menu_start:
+			case R.id.menu_start: {
 				if (isAdapterReady()) {
 					if (isConnected()) {
 						stopConnection();
@@ -249,25 +238,40 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), R.id.REQUEST_ENABLE_BT);
 				}
 				return true;
-			case R.id.menu_export:
+			}
+			case R.id.menu_export: {
 				try {
 					File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
 					path.mkdirs();
-					File file = new File(path, FULL_ISO_DATE_FORMAT.format(new java.util.Date(System.currentTimeMillis())) + ".tsv");
+					final File file = new File(path, FULL_ISO_DATE_FORMAT.format(new java.util.Date(System.currentTimeMillis())) + ".tsv");
 					U.info("exportAndClear: file=" + file);
-					PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)));
-					try {
-						Measurement.exportAndClear(dbHelper.getWritableDatabase(), out);
-					}
-					finally {
-						out.close();
-					}
-					showAlertDialog("Exported to " + file);
+					new Thread() {
+						public void run() {
+							try {
+								PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(file)));
+								try {
+									Measurement.exportAndClear(dbHelper.getWritableDatabase(), out);
+								}
+								finally {
+									out.close();
+								}
+								DeviceControlActivity.this.runOnUiThread(new Runnable() {
+									public void run() {
+										showAlertDialog("Exported to " + file);
+									}
+								});
+							}
+							catch (Exception e) {
+								U.info("exception: e=" + e, e);
+							}
+						}
+					}.start();
 				}
 				catch (Exception e) {
 					U.info("exception: e=" + e, e);
 				}
 				return true;
+			}
 			case R.id.menu_send: {
 				final Intent intent = new Intent(Intent.ACTION_SEND);
 				intent.setType("text/plain");
@@ -277,14 +281,15 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					);
 				startActivity(Intent.createChooser(intent, getString(R.string.menu_send)));
 				return true;
-				}
+			}
 			case R.id.menu_settings: {
 				final Intent intent = new Intent(this, SettingsActivity.class);
 				startActivity(intent);
 				return true;
-				}
-			default:
+			}
+			default: {
 				return super.onOptionsItemSelected(item);
+			}
 		}
 	}
 
@@ -415,8 +420,10 @@ public final class DeviceControlActivity extends Activity implements Constants {
 						activity.setDeviceName((String) msg.obj);
 						break;
 					case R.id.MESSAGE_WRITE:
+						U.info("MESSAGE_WRITE: message=" + msg);
 						break;
 					case R.id.MESSAGE_TOAST:
+						U.info("MESSAGE_TOAST: message=" + msg);
 						break;
 					default:
 						U.info("unknown message=" + msg.what);
@@ -446,24 +453,31 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		alertDialog.show();
 	}
 
-	public void playSound(double max) {
+	private boolean enable = true;
+	private double minimum =1200.;
+	private double divisor = 800.;
+	private int calmdown = 4;
+	private int alarm = 8;
+	private int alert = 10;
+	private long silence = 800;
+	private void playSound(double max) {
 		try {
 			// beep point calc
-			if (max > 1200.) {
-				beepPoints += (int)((max - 1200.) / 800.);
+			if (max > minimum) {
+				beepPoints += (int)((max - minimum) / divisor);
 			}
 			else {
-				beepPoints -= 4;
+				beepPoints -= calmdown;
 			}
 			if (beepPoints < 0) {
 				beepPoints = 0;
 			}
-			if (beepPoints >= 8) {
+			if (beepPoints >= alarm) {
 				long lastBeep = System.currentTimeMillis();
-				if (lastBeep - this.lastBeep > 800) { // dont beep too often
+				if (lastBeep - this.lastBeep > silence) { // dont beep too often
 					vibrator.vibrate(400);
 					toneGenerator.startTone(
-						beepPoints <= 10?
+						beepPoints <= alert?
 						ToneGenerator.TONE_PROP_ACK:
 						ToneGenerator.TONE_SUP_ERROR
 						, 400

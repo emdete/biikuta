@@ -1,11 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<PreferenceCategory android:title="@string/log_settings_category">
+	<PreferenceCategory android:title="Beep Settings">
 		<CheckBoxPreference
 			android:defaultValue="true"
-			android:key="@string/pref_log_direction"
-			android:summary="@string/log_direction_summary"
-			android:title="@string/log_direction"
+			android:key="beep.enable"
+			android:title="Beep on violence"
+			android:summary="Beep when forces are too high"
+			/>
+		<EditTextPreference
+			android:defaultValue="1200"
+			android:key="beep.minimum"
+			android:title="Low value"
+			android:summary="Beep when forces are too high"
+			/>
+		<EditTextPreference
+			android:defaultValue="800"
+			android:key="beep.divisor"
+			android:title="Point divisor value"
+			android:summary="Divisor to calculate points"
+			/>
+		<EditTextPreference
+			android:defaultValue="4"
+			android:key="beep.calmdown"
+			android:title="Points lost"
+			android:summary="Number of points calmed down"
+			/>
+		<EditTextPreference
+			android:defaultValue="8"
+			android:key="beep.alarm"
+			android:title="Alarmpoints"
+			android:summary="Number of points to alarm"
+			/>
+		<EditTextPreference
+			android:defaultValue="10"
+			android:key="beep.alert"
+			android:title="Alertpoints"
+			android:summary="Number of points to alert"
+			/>
+		<EditTextPreference
+			android:defaultValue="800"
+			android:key="beep.silence"
+			android:title="Silence time"
+			android:summary="Milliseconds to silent alarms"
+			/>
+	</PreferenceCategory>
+	<PreferenceCategory android:title="Export Settings">
+		<CheckBoxPreference
+			android:defaultValue="true"
+			android:key="export.purge"
+			android:title="Purge after export"
+			android:summary="Delete stored records after export"
 			/>
 	</PreferenceCategory>
 </PreferenceScreen>

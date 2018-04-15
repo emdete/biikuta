@@ -283,6 +283,7 @@ public class DeviceConnector implements Constants {
 	}
 
 	private void connectionLost() {
+		U.info("connectionLost");
 		Message msg = mHandler.obtainMessage(R.id.MESSAGE_TOAST);
 		Bundle bundle = new Bundle();
 		msg.setData(bundle);

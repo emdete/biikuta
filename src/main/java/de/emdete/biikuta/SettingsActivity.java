@@ -19,9 +19,6 @@ public final class SettingsActivity extends PreferenceActivity implements Shared
 		bar.setDisplayHomeAsUpEnabled(true);
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		prefs.registerOnSharedPreferenceChangeListener(this);
-		setPrefenceTitle(getString(R.string.pref_commands_mode));
-		setPrefenceTitle(getString(R.string.pref_checksum_mode));
-		setPrefenceTitle(getString(R.string.pref_commands_ending));
 	}
 
 	@Override public boolean onOptionsItemSelected(MenuItem item) {
@@ -36,16 +33,6 @@ public final class SettingsActivity extends PreferenceActivity implements Shared
 	}
 
 	@Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String value) {
-		setPrefenceTitle(value);
-	}
-
-	private void setPrefenceTitle(String TAG) {
-		final Preference preference = findPreference(TAG);
-		if (preference == null) return;
-		if (preference instanceof ListPreference) {
-			if (((ListPreference) preference).getEntry() == null) return;
-			final String title = ((ListPreference) preference).getEntry().toString();
-			preference.setTitle(title);
-		}
+		U.info("sharedPreferences=" + sharedPreferences + ", value=" + value);
 	}
 }

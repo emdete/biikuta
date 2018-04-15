@@ -18,10 +18,6 @@
 	<string name="none_found">Not found</string>
 	<string name="none_paired">No paired devices</string>
 	<string name="permission_request">This sample needs permission for camera and audio recording.</string>
-	<string name="pref_checksum_mode">pref_checksum_mode</string>
-	<string name="pref_commands_ending">pref_commands_ending</string>
-	<string name="pref_commands_mode">pref_commands_mode</string>
-	<string name="pref_log_direction">pref_log_direction</string>
 	<string name="search_message">Search for devices…</string>
 	<string name="select_device">Select device</string>
 	<string name="title_other_devices">Other devices</string>

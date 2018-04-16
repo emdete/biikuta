@@ -52,8 +52,8 @@ die Verlängerung bis zur Trense und die schützenden Gehäuse:</p>
 <p>Die Sensoren werden mittels Steckverbindungen (Klinkenbuchsen ca 2x 1€,
 vorgefertigtes Kabel mit Stecker ca 2x 2€) unabhängig angeschlossen:</p>
 <p><img src="file1512498124285.jpg" alt="Steckverbindung"></p>
-<p>Um den Sensor, der für Druck ausgelegt ist, wird ein Band gelegt, um den Zug
-am Zügel zu messen. Das Band drückt den Sensor auf die gleiche Weise bei Zug
+<p>Um den Sensor, der für Druck ausgelegt ist, wird ein Band gelegt, um den Zug am
+Zügel zu messen. Das Band drückt den Sensor auf die gleiche Weise bei Zug
 zusammen, als ob der Sensor (wie in der Waage) durch Gewicht zusammengedrückt
 wird:</p>
 <p><img src="file1512998328011.jpg" alt="Band"></p>
@@ -269,9 +269,9 @@ die Reiterin einen Handwechsel vornahm:</p>
 <a href="https://en.wikipedia.org/wiki/Wheatstone_bridge">Wheatstone-Bridge</a>, sie
 erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
 Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
-in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands ruft
-eine Änderung des Potentials zwischen den linken und rechten Polen aus, eine
-Spannung, die sich verstärken und dann digitalisieren lässt:</p>
+in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
+ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
+eine Spannung, die sich verstärken und dann digitalisieren lässt:</p>
 <p><img src="hx-711_wheatstone-bridge.jpg" alt="Wheatstone-Bridge"></p>
 <p>Der Verstärker ist ein HX-711, er braucht auf der Arduino-Seite PWM-fähige
 Eingänge:</p>
@@ -321,6 +321,7 @@ static const unsigned long frequency = 5L;
 void setup() {
     BT.begin(9600);
     LoadCell_1.begin(9, 10);
+
     LoadCell_1.set_scale(2280.f);
     LoadCell_1.tare();
     LoadCell_2.begin(5, 6);
@@ -350,13 +351,6 @@ void loop() {
     BT.print(";");
     BT.print(right_force, 1);
     BT.println();
-    if (BT.available()) {
-        switch (BT.read()) {
-            default:
-                BT.println("no function yet");
-            break;
-        }
-    }
     digitalWrite(13, LOW);
     tick += 1000L / frequency - min_wait;
     while (millis() &lt; tick) {
@@ -366,9 +360,9 @@ void loop() {
 </code></pre>
 <h3>Android-App</h3>
 <p>Die Android-App zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
-das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter verbinden,
-zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht auf. Auch ein
-synchrones Video ist noch nicht enthalten.</p>
+das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter
+verbinden, zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht
+auf. Auch ein synchrones Video ist noch nicht enthalten.</p>
 <p>Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
 <a href="https://github.com/emdete/biikuta">biikuta</a> veröffentlicht.</p>
 <h2>Rückschläge</h2>
@@ -381,6 +375,12 @@ integriert sind, kommen bei dem Projekt bereits leicht 100 Lötstellen zusammen.
 ist scheinbar nicht gut genug. Die Messung wird durch den Übergangs-Widerstand
 beeinflusst.</p>
 <h2>Verweise</h2>
+<h3>Zack!</h3>
+<p>Eine einmalige Messhilfe bietet
+<a href="http://www.swingtree.de/index.php?mp=50&amp;aktion=zack&amp;lk=de">Swingtree</a>:</p>
+<p><a href="IMG_20180408_194555.jpg"><img src="IMG_20180408_194555.jpg" alt="Zack!"></a></p>
+<p>Die Messtreifen sind allerdings zerstört, wenn die Kraft einmalig überschritten
+wurde und kostet sommit ca 60¢.</p>
 <h3>Pferdeheilkunde 22 (2006)</h3>
 <p>Folgenden Artikel fand ich zum Thema: <a href="20060512.pdf">Der Einfluss von Zügel und
 Gebiss...</a>.</p>
@@ -389,23 +389,24 @@ Gebiss...</a>.</p>
 und auch weitere Messwerte (Schenkelkräfte, Gewichtseinwirkung, Kraft auf den
 Nasenriemen, Puls, ...) einzubeziehen lies sich am 31. März 2010 bereits Heinz
 Gross unter <a href="https://www.google.com/patents/DE202010000515U1">DE202010000515U1</a>
-patentieren, das Patent ist aber wohl wegen verstrichener Fristen abgelaufen.
-Anmeldender Anwalt war damals Jochen Hansen von <a href="http://www.patent-marke-design.de/">Kanzlei
+patentieren. Anmeldender Anwalt war damals Jochen Hansen von <a href="http://www.patent-marke-design.de/">Kanzlei
 HQuadrat</a>. Eine Nähe zu meiner Idee ist
-ausserdem Ausgeschlossen, da die Messung explizit mit Dehnungsmessstreifen zur
+Ausgeschlossen, da die Messung explizit mit Dehnungsmessstreifen zur
 Gewichtsoptimierung umgesetzt wird. Ich setze aber auf Biegesensoren zur
-Kostenoptimimierung.</p>
+Kostenoptimimierung. Mit meiner Veröffentlichung ist nun übrigens mein Idee
+nicht mehr patentierbar.</p>
+<h3>Cavallo (2015)</h3>
 <p>Auch die Zeitschrift Cavallo nutzt in einem Bericht eine ähnliche Apparatur:
 <a href="https://www.cavallo.de/training-fuers-pferd/zuegelmessung-pferde-wuenschen-sanfte-anlehnung.1325694.233219.htm">Zügel-Messung mit drei
 Pferden</a>
 vom 15. Februar 2015. Auch hier werden aber Biegesensoren eingesetzt. Darin
 erwähnen sie eine Zügelmessung die 10 Jahre vorher stattgefunden hat, also weit
 vor dem Patenteintrag.</p>
-<h3>Zack!</h3>
-<p>Eine einmalige Messhilfe bietet <a href="http://www.swingtree.de/">Swingtree</a>:</p>
-<p><a href="IMG_20180408_194555.jpg"><img src="IMG_20180408_194555.jpg" alt="Zack!"></a></p>
-<p>Die Messtreiefen sind allerdings zerstört, wenn die Kraft überschritten wurde.</p>
-<h3>Bachelor</h3>
+<h3>Horsica (2017)</h3>
+<p>Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel allerdings
+am statischen Objekt vorgenommen wurden. Leider habe ich keinen konkreten
+Kontakt.</p>
+<h3>Bachelor (2017)</h3>
 <p>Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
 Zügelkräfte messen.</p>
 <p><a href="29750049_1858234934228952_7934824769735945477_o.jpg"><img src="29750049_1858234934228952_7934824769735945477_o.jpg" alt="Zack!"></a></p>

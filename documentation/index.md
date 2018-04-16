@@ -58,8 +58,8 @@ vorgefertigtes Kabel mit Stecker ca 2x 2€) unabhängig angeschlossen:
 
 ![Steckverbindung](file1512498124285.jpg)
 
-Um den Sensor, der für Druck ausgelegt ist, wird ein Band gelegt, um den Zug
-am Zügel zu messen. Das Band drückt den Sensor auf die gleiche Weise bei Zug
+Um den Sensor, der für Druck ausgelegt ist, wird ein Band gelegt, um den Zug am
+Zügel zu messen. Das Band drückt den Sensor auf die gleiche Weise bei Zug
 zusammen, als ob der Sensor (wie in der Waage) durch Gewicht zusammengedrückt
 wird:
 
@@ -198,9 +198,9 @@ Die Sensoren beruhen auf einer sogenannten
 [Wheatstone-Bridge](https://en.wikipedia.org/wiki/Wheatstone_bridge), sie
 erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
 Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
-in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands ruft
-eine Änderung des Potentials zwischen den linken und rechten Polen aus, eine
-Spannung, die sich verstärken und dann digitalisieren lässt:
+in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
+ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
+eine Spannung, die sich verstärken und dann digitalisieren lässt:
 
 ![Wheatstone-Bridge](hx-711_wheatstone-bridge.jpg)
 
@@ -268,6 +268,7 @@ static const unsigned long frequency = 5L;
 void setup() {
 	BT.begin(9600);
 	LoadCell_1.begin(9, 10);
+
 	LoadCell_1.set_scale(2280.f);
 	LoadCell_1.tare();
 	LoadCell_2.begin(5, 6);
@@ -297,13 +298,6 @@ void loop() {
 	BT.print(";");
 	BT.print(right_force, 1);
 	BT.println();
-	if (BT.available()) {
-		switch (BT.read()) {
-			default:
-				BT.println("no function yet");
-			break;
-		}
-	}
 	digitalWrite(13, LOW);
 	tick += 1000L / frequency - min_wait;
 	while (millis() < tick) {
@@ -315,9 +309,9 @@ void loop() {
 ### Android-App
 
 Die Android-App zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
-das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter verbinden,
-zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht auf. Auch ein
-synchrones Video ist noch nicht enthalten.
+das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter
+verbinden, zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht
+auf. Auch ein synchrones Video ist noch nicht enthalten.
 
 Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
 [biikuta](https://github.com/emdete/biikuta) veröffentlicht.
@@ -336,6 +330,16 @@ beeinflusst.
 
 ## Verweise
 
+### Zack!
+
+Eine einmalige Messhilfe bietet
+[Swingtree](http://www.swingtree.de/index.php?mp=50&aktion=zack&lk=de):
+
+[![Zack!](IMG_20180408_194555.jpg)](IMG_20180408_194555.jpg)
+
+Die Messtreifen sind allerdings zerstört, wenn die Kraft einmalig überschritten
+wurde und kostet sommit ca 60¢.
+
 ### Pferdeheilkunde 22 (2006)
 
 Folgenden Artikel fand ich zum Thema: [Der Einfluss von Zügel und
@@ -347,12 +351,14 @@ Die naheliegende Idee, Zügelkräfte zu messen, die Daten per Funk zu Übertrage
 und auch weitere Messwerte (Schenkelkräfte, Gewichtseinwirkung, Kraft auf den
 Nasenriemen, Puls, ...) einzubeziehen lies sich am 31. März 2010 bereits Heinz
 Gross unter [DE202010000515U1](https://www.google.com/patents/DE202010000515U1)
-patentieren, das Patent ist aber wohl wegen verstrichener Fristen abgelaufen.
-Anmeldender Anwalt war damals Jochen Hansen von [Kanzlei
+patentieren. Anmeldender Anwalt war damals Jochen Hansen von [Kanzlei
 HQuadrat](http://www.patent-marke-design.de/). Eine Nähe zu meiner Idee ist
-ausserdem Ausgeschlossen, da die Messung explizit mit Dehnungsmessstreifen zur
+Ausgeschlossen, da die Messung explizit mit Dehnungsmessstreifen zur
 Gewichtsoptimierung umgesetzt wird. Ich setze aber auf Biegesensoren zur
-Kostenoptimimierung.
+Kostenoptimimierung. Mit meiner Veröffentlichung ist nun übrigens mein Idee
+nicht mehr patentierbar.
+
+### Cavallo (2015)
 
 Auch die Zeitschrift Cavallo nutzt in einem Bericht eine ähnliche Apparatur:
 [Zügel-Messung mit drei
@@ -361,15 +367,13 @@ vom 15. Februar 2015. Auch hier werden aber Biegesensoren eingesetzt. Darin
 erwähnen sie eine Zügelmessung die 10 Jahre vorher stattgefunden hat, also weit
 vor dem Patenteintrag.
 
-### Zack!
+### Horsica (2017)
 
-Eine einmalige Messhilfe bietet [Swingtree](http://www.swingtree.de/):
+Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel allerdings
+am statischen Objekt vorgenommen wurden. Leider habe ich keinen konkreten
+Kontakt.
 
-[![Zack!](IMG_20180408_194555.jpg)](IMG_20180408_194555.jpg)
-
-Die Messtreiefen sind allerdings zerstört, wenn die Kraft überschritten wurde.
-
-### Bachelor
+### Bachelor (2017)
 
 Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
 Zügelkräfte messen.

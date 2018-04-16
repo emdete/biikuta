@@ -374,6 +374,8 @@ Die Messtreiefen sind allerdings zerstört, wenn die Kraft überschritten wurde.
 Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
 Zügelkräfte messen.
 
+[![Zack!](29750049_1858234934228952_7934824769735945477_o.jpg)](29750049_1858234934228952_7934824769735945477_o.jpg)
+
 ## Urheber
 
 ![Bild Michael Dietrich](michael.dietrich.jpg)

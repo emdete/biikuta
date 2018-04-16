@@ -13,6 +13,6 @@ dbg: all
 index.html: index.md Makefile $(SCRIPT)
 	$(SCRIPT) < $< > $@
 
-ic_launcher.svg: ../ic_launcher.svg
+ic_launcher.svg: ../art/ic_launcher.svg
 	cp $< $@
 

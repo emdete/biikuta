@@ -228,7 +228,7 @@ public class StoreObject {
 			throw new Exception("id=" + id);
 		}
 		id = db.insert(this.getClass().getSimpleName(), "null", toContentValues(new ContentValues()));
-		Log.d(TAG, "new item id=" + id);
+		Log.d(TAG, "new item id=" + id + ", this=" + this);
 		return this;
 	}
 
@@ -363,6 +363,13 @@ public class StoreObject {
 		if (db.delete(this.getClass().getSimpleName(), ID_WHERE, new String[]{String.valueOf(id)}) != 1) {
 			throw new Exception("did not delete 1");
 		}
+	}
+
+	/**
+	* truncate all record from the database.
+	*/
+	public void truncate(SQLiteDatabase db) throws Exception {
+		db.delete(this.getClass().getSimpleName(), null, null);
 	}
 
 	/**

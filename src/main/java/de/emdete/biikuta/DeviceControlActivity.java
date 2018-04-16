@@ -63,7 +63,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		public Measurement(String message) throws Exception {
 			String[] values = message.trim().split("\t");
 			if (values.length < 5) {
-				throw new Exception("receivedMessage: less than 5 elements length=" + values.length);
+				throw new Exception("Measurement: less than 5 elements length=" + values.length);
 			}
 			this.timestamp = System.currentTimeMillis();
 			this.tick = Double.parseDouble(values[0]);
@@ -71,7 +71,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 			this.temperature = Double.parseDouble(values[2]);
 			this.left_force = Double.parseDouble(values[3]);
 			this.right_force = Double.parseDouble(values[4]);
-			U.info("receivedMessage: " + this);
+			//U.info("Measurement: " + this);
 			if (this.left_force < 0) {
 				this.left_force = -this.left_force;
 			}
@@ -92,6 +92,8 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		}
 
 		static void exportAndClear(final SQLiteDatabase db, final PrintWriter out) throws Exception {
+			long start = System.currentTimeMillis();
+			long count = 0;
 			out.println(
 				"timestamp" + FS +
 				"tick" + FS +
@@ -108,8 +110,13 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					val.temperature + FS +
 					val.left_force + FS +
 					val.right_force);
-				val.delete(db);
+				// exportAndClear count=744, millis=8992
+				//val.delete(db);
+				count++;
 			}
+			// exportAndClear count=560, millis=358
+			new Measurement().truncate(db);
+			U.info("exportAndClear count=" + count + ", millis=" + (System.currentTimeMillis() - start));
 		}
 	}
 
@@ -244,7 +251,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 					File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
 					path.mkdirs();
 					final File file = new File(path, FULL_ISO_DATE_FORMAT.format(new java.util.Date(System.currentTimeMillis())) + ".tsv");
-					U.info("exportAndClear: file=" + file);
+					U.info("onOptionsItemSelected.menu_export: file=" + file);
 					new Thread() {
 						public void run() {
 							try {
@@ -347,7 +354,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	}
 
 	void receivedMessage(String message) {
-		U.info("receivedMessage: " + message);
+		//U.info("receivedMessage: " + message);
 		try {
 			Measurement val = new Measurement(message);
 			if (left_force_max < val.left_force)

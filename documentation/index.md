@@ -132,15 +132,150 @@ Und schliesslich muss alles tariert und skaliert werden:
 
 ![](IMG_20180129_124544.jpg)
 
+## Die zugrundeliegende Technik
+
+### Kraftsensoren
+
+Die Sensoren beruhen auf einer sogenannten
+[Wheatstone-Bridge](https://en.wikipedia.org/wiki/Wheatstone_bridge), sie
+erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
+Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
+in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
+ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
+eine Spannung, die sich verstärken und dann digitalisieren lässt:
+
+![Wheatstone-Bridge](hx-711_wheatstone-bridge.jpg)
+
+Der Verstärker ist ein HX-711, er braucht auf der Arduino-Seite PWM-fähige
+Eingänge:
+
+![HX-711](hx-711_connection.jpg)
+
+Die Sensoren kommen mit drei Anschlüssen und enthalten nur 2 der 4 nötigen
+Widerstände:
+
+![Sensor](hx-711_sensor.png)
+
+### Bluetooth
+
+Die Bluetooth-Lösung ist etwas... gewalttätig. Wenn man sich klar macht, welche
+Prozessorleistung nötig ist, um Bluetooth umzusetzen und was ein Arduino
+vermag, passt beides im Grunde nicht zusammen. Da heute auch performante
+Prozessoren billig und stromsparend zu haben sind, gibt es für den Arduino
+Erweiterungen, die die gesamte Bluetooth-Thematik erledigen. Vermutlich steckt
+auf der Platine ein ARM Prozessor (ein kleiner Bruder dessen, was wie in
+unseren Smartphones haben) neben dem primitiven Prozessor des Arduino. Die
+Verdrahtung ist also vergleichsweise einfach, Masse, Power, In und Out (4
+Kabel):
+
+![HC-06](hc-06_connection.jpg)
+
+### Temperatur
+
+Der Arduino ist mit Bluetooth und zwei Kraftsensoren ausgereizt. Er
+besitzt nur 6 PWM fähige Pins (wenn man den USB-Anschluss zum Flashen &
+Debuggen nicht verlieren will) und jeweils zwei werden pro Komponente
+benötigt. Nur für einfache D/A Wandlung sind weitere Pins verfügbar.
+
+Es ist also Platz, zB auch die Temperatur zu messen (da es so simpel ist),
+hierfür gibt es Bauteile (LM-35, weniger als 1€), die dies recht einfach mit
+dem Arduino vermögen:
+
+![LM-35](lm-35_connection.jpg)
+
+## Die Software
+
+Schliesslich müssen Programme entwickelt werden. Ein kleines Programm auf dem
+Arduino liest die Daten von den Sensoren und übergibt sie an die Komponente die
+diese per Bluetooth überträgt. Da Smartphones verfügbar und mobil sind, eignen
+sie sich am besten, um die Daten empfangen. Die beste Möglichkeit ist eine
+Android-App, die Entwicklung für IOS ist zu aufwendig und andere Systeme zu
+wenig verbreitet.
+
+### Arduino-Programm
+
+Das Programm für den Arduino ist übersichtlich. Von Debug-Statements und
+Kommentaren befreit sind es nur ein paar Zeilen:
+
+```
+#include <HX711.h>
+#include <SoftwareSerial.h>
+
+SoftwareSerial BT(11, 3);
+HX711 LoadCell_1;
+HX711 LoadCell_2;
+static const unsigned long min_wait = 3L;
+static const unsigned long frequency = 5L;
+
+void setup() {
+	BT.begin(9600);
+	LoadCell_1.begin(9, 10);
+	LoadCell_1.set_scale(2280.f);
+	LoadCell_1.tare();
+	LoadCell_2.begin(5, 6);
+	LoadCell_2.set_scale(2280.f);
+	LoadCell_2.tare();
+	BT.println();
+	BT.println("tick;tock;left;right");
+}
+
+void loop() {
+	unsigned long tick = millis();
+	delay(1000 / frequency / 2);
+	digitalWrite(13, HIGH);
+	float current_millis=0;
+	float tock=millis();
+	float left_force=0;
+	float right_force=0;
+	current_millis = tick / 1000.0;
+	left_force = LoadCell_1.get_units();
+	right_force = LoadCell_2.get_units();
+	tock = (millis() - tock) / 1000.0;
+	BT.print(current_millis, 3);
+	BT.print(";");
+	BT.print(tock, 3);
+	BT.print(";");
+	BT.print(left_force, 1);
+	BT.print(";");
+	BT.print(right_force, 1);
+	BT.println();
+	digitalWrite(13, LOW);
+	tick += 1000L / frequency - min_wait;
+	while (millis() < tick) {
+		delay(min_wait);
+	}
+}
+```
+
+### Android-App
+
+Die Android-App kann sich bereits zum Mess-Adapter
+verbinden und empfängt die Werte.
+
+Sie zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
+das Logo der App, siehe oben).
+
+Die Werte werden mit Zeitpunkten aufgezeichnet. Nach dem Ritt können die
+Werte in eine `.tsv`-Datei (Tab-Separated-Value, ein Format dass gut von
+Tabellenkalkulationen und ähnlichen Programmen verarbeitet werden kann)
+exportiert werden und vom Handy auf einen Computer übertragen werden.
+
+Ein synchrones Video ist noch nicht enthalten.
+
+Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
+[biikuta](https://github.com/emdete/biikuta) veröffentlicht.
+
+## Die Realität
+
 ### Der erste Testlauf
 
-Zwei Reiter und Pferde stellen sich zu einem ersten Testlauf zur Verfügung. Der
+Zwei Reiter und Pferde stellen sich zu einem ersten Testlauf zur Verfügung. Die
 Verschnallung funktioniert gut, nur der Halsriemen könnte für dieses Pferd mit
 dem kräftigen Hals etwas länger sein:
 
 ![](IMG_20180213_164316.jpg)
 
-Wärend des Reitens kann man die Balken prima beobachten und mit den gesehenen
+Während des Reitens kann man die Balken prima beobachten und mit den gesehenen
 Hilfen und Reaktionen des Pferde abgleichen. Es wird klar, dass die App zu den
 Werten einen Video aufzeichnen muss. Auf jeden Fall macht es Spass zu
 fachsimpeln, was man da eigentlich sieht.
@@ -190,133 +325,66 @@ die Reiterin einen Handwechsel vornahm:
 
 [![alles](handwechsel.png)](handwechsel.png)
 
-## Die Technik
+### Video
 
-### Kraftsensoren
+Meine Idee war, dem Reiter die Möglichkeit zu geben, nach dem Ritte seine
+Zügelhandhabung zu reflektieren. Lediglich die Kurven zu betrachten ist
+natürlich recht sinnlos, weil man den Moment in dem die Hilfe genutzt
+wurde nicht mehr korrelieren kann.
 
-Die Sensoren beruhen auf einer sogenannten
-[Wheatstone-Bridge](https://en.wikipedia.org/wiki/Wheatstone_bridge), sie
-erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
-Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
-in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
-ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
-eine Spannung, die sich verstärken und dann digitalisieren lässt:
+Ich will darum mit den Kräften ein Video aufzeichnen und die
+Kraft-Anzeige direkt in das Video einspielen.
 
-![Wheatstone-Bridge](hx-711_wheatstone-bridge.jpg)
+### Pieper
 
-Der Verstärker ist ein HX-711, er braucht auf der Arduino-Seite PWM-fähige
-Eingänge:
+Eine Bekannte (Ulrika, danke!), ihres Zeichens Reitlehrerin allerdings
+fand die Idee, den Ritt nach dem eigentlichen Reiten zu besprechen
+unrealistisch, weil dafür mit den Reitschülern selten die Zeit ist. Sie
+hat die Vorstellung, dass direkt beim Ritte zu große Kräfte durch
+Piepsen angezeigt werden.
 
-![HX-711](hx-711_connection.jpg)
+Die App kann das leicht tun, also entwickelte ich ein Regelsystem,
+nachdem die App bestimmt, wann gepiepst werden soll. Es beruht auf einem
+Punktesystem, dass die Kraft über die Zeit integriert. Kurze hohe Kräfte
+aber auch lange mittlere Kräfte werden so abgepiepst.
 
-Die Sensoren kommen mit drei Anschlüssen und enthalten nur 2 der 4 nötigen
-Widerstände:
+### Nachbearbeitung
 
-![Sensor](hx-711_sensor.png)
-
-### Bluetooth
-
-Die Bluetooth-Lösung ist etwas... gewalttätig. Wenn man sich klar macht, welche
-Prozessorleistung nötig ist, um Bluetooth umzusetzen und was ein Arduino
-vermag, passt beides im Grunde nicht zusammen. Da heute auch performante
-Prozessoren billig und stromsparend sind, gibt es für den Arduino
-Erweiterungen, die die gesamte Bluetooth-Thematik erledigen. Vermutlich steckt
-auf der Platine ein ARM Prozessor (ein kleiner Bruder dessen, was wie in
-unseren Smartphones haben) neben dem primitiven Prozessor des Arduino. Die
-Verdrahtung ist also vergleichsweise einfach, Masse, Power, In und Out (4
-Kabel):
-
-![HC-06](hc-06_connection.jpg)
-
-### Temperatur
-
-Der Arduino ist mit Bluetooth und zwei Kraftsensoren ausgereizt. Er besitzt nur
-6 PWM fähige Pins (wenn man den USB-Anschluss zum Debuggen nicht verlieren
-will) und jeweils zwei werden pro Komponente benötigt. Nur für einfache D/A
-Wandlung sind weitere Pins verfügbar.
-
-Es ist also Platz, zB auch die Temperatur zu messen (da es so simpel ist),
-hierfür gibt es Bauteile (LM-35, weniger als 1€), die dies recht einfach mit
-dem Arduino vermögen:
-
-![LM-35](lm-35_connection.jpg)
-
-## Source-Code
-
-Schliesslich müssen Programme entwickelt werden. Ein kleines Programm auf dem
-Arduino liest die Daten von den Sensoren und übergibt sie an die Komponente die
-diese per Bluetooth überträgt. Da Smartphones verfügbar und mobil sind, eignen
-sie sich am besten, um die Daten empfangen. Die beste Möglichkeit ist eine
-Android-App, die Entwicklung für IOS ist zu aufwendig und andere Systeme zu
-wenig verbreitet.
-
-### Arduino-Programm
-
-Das Programm für den Arduino ist übersichtlich. Von Debug-Statements und
-Kommentaren befreit sind es nur ein paar Zeilen:
+Zur schnellen Darstellung verwende ich `gnuplot`. Mit wenigen Befehlen
+können die Punkte angezeigt werden:
 
 ```
-#include "HX711.h"
-#include <SoftwareSerial.h>
-
-SoftwareSerial BT(11, 3);
-HX711 LoadCell_1;
-HX711 LoadCell_2;
-static const unsigned long min_wait = 3L;
-static const unsigned long frequency = 5L;
-
-void setup() {
-	BT.begin(9600);
-	LoadCell_1.begin(9, 10);
-
-	LoadCell_1.set_scale(2280.f);
-	LoadCell_1.tare();
-	LoadCell_2.begin(5, 6);
-	LoadCell_2.set_scale(2280.f);
-	LoadCell_2.tare();
-	BT.println();
-	BT.println("tick;tock;left;right");
-}
-
-void loop() {
-	unsigned long tick = millis();
-	delay(1000 / frequency / 2);
-	digitalWrite(13, HIGH);
-	float current_millis=0;
-	float tock=millis();
-	float left_force=0;
-	float right_force=0;
-	current_millis = tick / 1000.0;
-	left_force = LoadCell_1.get_units();
-	right_force = LoadCell_2.get_units();
-	tock = (millis() - tock) / 1000.0;
-	BT.print(current_millis, 3);
-	BT.print(";");
-	BT.print(tock, 3);
-	BT.print(";");
-	BT.print(left_force, 1);
-	BT.print(";");
-	BT.print(right_force, 1);
-	BT.println();
-	digitalWrite(13, LOW);
-	tick += 1000L / frequency - min_wait;
-	while (millis() < tick) {
-		delay(min_wait);
-	}
-}
+gnuplot> set autoscale fix
+gnuplot> set key left Left
+gnuplot> set offset 0,0,.5,.5
+gnuplot> set style data line
+gnuplot> stats '2018-04-14-14-53-39-44.tsv' index 0 using 5 prefix "L"
+gnuplot> stats '2018-04-14-14-53-39-44.tsv' index 0 using 6 prefix "R"
+gnuplot> plot '2018-04-14-14-53-39-44.tsv' index 0 using 5 title "Left", '2018-04-14-14-53-39-44.tsv' index 0 using 6 title "Right"
 ```
 
-### Android-App
+Auch eine Tabellenkalkulation (`libreoffice`, ...) kann genutzt werden,
+solche Programme sind mit der Datenmenge aber schnell überfordert.
+Ansonsten ist `R` eine gute Möglichkeit mit den Daten "zu spielen".
 
-Die Android-App zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
-das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter
-verbinden, zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht
-auf. Auch ein synchrones Video ist noch nicht enthalten.
+### Mehr Messwerte
 
-Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
-[biikuta](https://github.com/emdete/biikuta) veröffentlicht.
+Weitere Messwerte zeitgleich zu Erfassen könnte weitere Aufschlüsse
+geben (vom Puls könnte auf den Stressfaktor des Pferdes geschlossen
+werden):
+
+- Schenkelkräfte
+- Gewichtseinwirkung
+- Kraft auf den Nasenriemen
+- Puls
+
+Auch könnten (wenn es kein Video gibt) per Knöpfe in der App Werte
+manuell erfasst werden wie zum Beispiel die Gangart oder andere
+Ereignisse.
 
 ## Rückschläge
+
+### Löten
 
 Kalte Lötstellen sind das größte Problem: Man sieht sie nicht und sie lauern
 irgendwo in der Schaltung. Am Ende lötet man alle Stellen erneut und erzeugt
@@ -324,9 +392,19 @@ dabei schlimmstenfalls eine Neue. Obwohl die Schaltung simpel ist und die
 Komponenten für Bluetooth und Signalverstärkung auf jeweils einer Platine
 integriert sind, kommen bei dem Projekt bereits leicht 100 Lötstellen zusammen.
 
+### Übergangswiderstände
+
 Es stellt sich heraus, daß die Steckverbindung keine gute Idee es, der Kontakt
 ist scheinbar nicht gut genug. Die Messung wird durch den Übergangs-Widerstand
-beeinflusst.
+beeinflusst. Sie mussten entfernt und alles neu gelötet werden.
+
+### Einsatz am Pferd
+
+Nach ein paar Einsätzen am Pferd sind die Sensoren defekt. Ein Blick
+hinter die (Leder-)Kulissen zeigt, dass die Kabel aus der Zugentlastung
+gerissen sind und beide weissen Kabel getrennt sind.
+
+[![Defekte](IMG_20180419_164508.jpg)](IMG_20180419_164508.jpg)
 
 ## Verweise
 
@@ -338,7 +416,7 @@ Eine einmalige Messhilfe bietet
 [![Zack!](IMG_20180408_194555.jpg)](IMG_20180408_194555.jpg)
 
 Die Messtreifen sind allerdings zerstört, wenn die Kraft einmalig überschritten
-wurde und kostet sommit ca 60¢.
+wurde und kostet pro Messung somit ca 60¢.
 
 ### Pferdeheilkunde 22 (2006)
 
@@ -348,8 +426,7 @@ Gebiss...](20060512.pdf).
 ### Patent (2008)
 
 Die naheliegende Idee, Zügelkräfte zu messen, die Daten per Funk zu Übertragen
-und auch weitere Messwerte (Schenkelkräfte, Gewichtseinwirkung, Kraft auf den
-Nasenriemen, Puls, ...) einzubeziehen lies sich am 31. März 2010 bereits Heinz
+und auch weitere Messwerte einzubeziehen liess sich am 31. März 2010 bereits Heinz
 Gross unter [DE202010000515U1](https://www.google.com/patents/DE202010000515U1)
 patentieren. Anmeldender Anwalt war damals Jochen Hansen von [Kanzlei
 HQuadrat](http://www.patent-marke-design.de/). Eine Nähe zu meiner Idee ist
@@ -365,20 +442,21 @@ Auch die Zeitschrift Cavallo nutzt in einem Bericht eine ähnliche Apparatur:
 Pferden](https://www.cavallo.de/training-fuers-pferd/zuegelmessung-pferde-wuenschen-sanfte-anlehnung.1325694.233219.htm)
 vom 15. Februar 2015. Auch hier werden aber Biegesensoren eingesetzt. Darin
 erwähnen sie eine Zügelmessung die 10 Jahre vorher stattgefunden hat, also weit
-vor dem Patenteintrag.
+vor dem Patenteintrag - sollten also die Messsensoren als äquivalent angesehen
+werden, war aus diesem Grunde schon die Idee nicht mehr patentierbar.
 
 ### Horsica (2017)
 
-Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel allerdings
-am statischen Objekt vorgenommen wurden. Leider habe ich keinen konkreten
-Kontakt.
+Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel
+allerdings analog und am statischen Objekt vorgenommen wurden. Leider
+habe ich keinen konkreten Kontakt.
 
 ### Bachelor (2017)
 
 Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
 Zügelkräfte messen.
 
-[![Zack!](29750049_1858234934228952_7934824769735945477_o.jpg)](29750049_1858234934228952_7934824769735945477_o.jpg)
+[![Bachelor](29750049_1858234934228952_7934824769735945477_o.jpg)](29750049_1858234934228952_7934824769735945477_o.jpg)
 
 ## Urheber
 

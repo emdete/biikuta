@@ -99,12 +99,119 @@ vor der rauen Welt der Reiterei zu schützen:</p>
 <p><img src="IMG_20180128_175246.jpg" alt=""></p>
 <p>Und schliesslich muss alles tariert und skaliert werden:</p>
 <p><img src="IMG_20180129_124544.jpg" alt=""></p>
+<h2>Die zugrundeliegende Technik</h2>
+<h3>Kraftsensoren</h3>
+<p>Die Sensoren beruhen auf einer sogenannten
+<a href="https://en.wikipedia.org/wiki/Wheatstone_bridge">Wheatstone-Bridge</a>, sie
+erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
+Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
+in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
+ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
+eine Spannung, die sich verstärken und dann digitalisieren lässt:</p>
+<p><img src="hx-711_wheatstone-bridge.jpg" alt="Wheatstone-Bridge"></p>
+<p>Der Verstärker ist ein HX-711, er braucht auf der Arduino-Seite PWM-fähige
+Eingänge:</p>
+<p><img src="hx-711_connection.jpg" alt="HX-711"></p>
+<p>Die Sensoren kommen mit drei Anschlüssen und enthalten nur 2 der 4 nötigen
+Widerstände:</p>
+<p><img src="hx-711_sensor.png" alt="Sensor"></p>
+<h3>Bluetooth</h3>
+<p>Die Bluetooth-Lösung ist etwas... gewalttätig. Wenn man sich klar macht, welche
+Prozessorleistung nötig ist, um Bluetooth umzusetzen und was ein Arduino
+vermag, passt beides im Grunde nicht zusammen. Da heute auch performante
+Prozessoren billig und stromsparend zu haben sind, gibt es für den Arduino
+Erweiterungen, die die gesamte Bluetooth-Thematik erledigen. Vermutlich steckt
+auf der Platine ein ARM Prozessor (ein kleiner Bruder dessen, was wie in
+unseren Smartphones haben) neben dem primitiven Prozessor des Arduino. Die
+Verdrahtung ist also vergleichsweise einfach, Masse, Power, In und Out (4
+Kabel):</p>
+<p><img src="hc-06_connection.jpg" alt="HC-06"></p>
+<h3>Temperatur</h3>
+<p>Der Arduino ist mit Bluetooth und zwei Kraftsensoren ausgereizt. Er
+besitzt nur 6 PWM fähige Pins (wenn man den USB-Anschluss zum Flashen &amp;
+Debuggen nicht verlieren will) und jeweils zwei werden pro Komponente
+benötigt. Nur für einfache D/A Wandlung sind weitere Pins verfügbar.</p>
+<p>Es ist also Platz, zB auch die Temperatur zu messen (da es so simpel ist),
+hierfür gibt es Bauteile (LM-35, weniger als 1€), die dies recht einfach mit
+dem Arduino vermögen:</p>
+<p><img src="lm-35_connection.jpg" alt="LM-35"></p>
+<h2>Die Software</h2>
+<p>Schliesslich müssen Programme entwickelt werden. Ein kleines Programm auf dem
+Arduino liest die Daten von den Sensoren und übergibt sie an die Komponente die
+diese per Bluetooth überträgt. Da Smartphones verfügbar und mobil sind, eignen
+sie sich am besten, um die Daten empfangen. Die beste Möglichkeit ist eine
+Android-App, die Entwicklung für IOS ist zu aufwendig und andere Systeme zu
+wenig verbreitet.</p>
+<h3>Arduino-Programm</h3>
+<p>Das Programm für den Arduino ist übersichtlich. Von Debug-Statements und
+Kommentaren befreit sind es nur ein paar Zeilen:</p>
+<pre><code>#include &lt;HX711.h&gt;
+#include &lt;SoftwareSerial.h&gt;
+
+SoftwareSerial BT(11, 3);
+HX711 LoadCell_1;
+HX711 LoadCell_2;
+static const unsigned long min_wait = 3L;
+static const unsigned long frequency = 5L;
+
+void setup() {
+    BT.begin(9600);
+    LoadCell_1.begin(9, 10);
+    LoadCell_1.set_scale(2280.f);
+    LoadCell_1.tare();
+    LoadCell_2.begin(5, 6);
+    LoadCell_2.set_scale(2280.f);
+    LoadCell_2.tare();
+    BT.println();
+    BT.println("tick;tock;left;right");
+}
+
+void loop() {
+    unsigned long tick = millis();
+    delay(1000 / frequency / 2);
+    digitalWrite(13, HIGH);
+    float current_millis=0;
+    float tock=millis();
+    float left_force=0;
+    float right_force=0;
+    current_millis = tick / 1000.0;
+    left_force = LoadCell_1.get_units();
+    right_force = LoadCell_2.get_units();
+    tock = (millis() - tock) / 1000.0;
+    BT.print(current_millis, 3);
+    BT.print(";");
+    BT.print(tock, 3);
+    BT.print(";");
+    BT.print(left_force, 1);
+    BT.print(";");
+    BT.print(right_force, 1);
+    BT.println();
+    digitalWrite(13, LOW);
+    tick += 1000L / frequency - min_wait;
+    while (millis() &lt; tick) {
+        delay(min_wait);
+    }
+}
+</code></pre>
+<h3>Android-App</h3>
+<p>Die Android-App kann sich bereits zum Mess-Adapter
+verbinden und empfängt die Werte.</p>
+<p>Sie zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
+das Logo der App, siehe oben).</p>
+<p>Die Werte werden mit Zeitpunkten aufgezeichnet. Nach dem Ritt können die
+Werte in eine <code>.tsv</code>-Datei (Tab-Separated-Value, ein Format dass gut von
+Tabellenkalkulationen und ähnlichen Programmen verarbeitet werden kann)
+exportiert werden und vom Handy auf einen Computer übertragen werden.</p>
+<p>Ein synchrones Video ist noch nicht enthalten.</p>
+<p>Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
+<a href="https://github.com/emdete/biikuta">biikuta</a> veröffentlicht.</p>
+<h2>Die Realität</h2>
 <h3>Der erste Testlauf</h3>
-<p>Zwei Reiter und Pferde stellen sich zu einem ersten Testlauf zur Verfügung. Der
+<p>Zwei Reiter und Pferde stellen sich zu einem ersten Testlauf zur Verfügung. Die
 Verschnallung funktioniert gut, nur der Halsriemen könnte für dieses Pferd mit
 dem kräftigen Hals etwas länger sein:</p>
 <p><img src="IMG_20180213_164316.jpg" alt=""></p>
-<p>Wärend des Reitens kann man die Balken prima beobachten und mit den gesehenen
+<p>Während des Reitens kann man die Balken prima beobachten und mit den gesehenen
 Hilfen und Reaktionen des Pferde abgleichen. Es wird klar, dass die App zu den
 Werten einen Video aufzeichnen muss. Auf jeden Fall macht es Spass zu
 fachsimpeln, was man da eigentlich sieht.</p>
@@ -263,131 +370,79 @@ Diagramm zu erzeugen, gnuplot ist da etwas toleranter:</p>
 <p>In die Grafik kann man hineinzoomen und sich zB einen Moment anschauen, an dem
 die Reiterin einen Handwechsel vornahm:</p>
 <p><a href="handwechsel.png"><img src="handwechsel.png" alt="alles"></a></p>
-<h2>Die Technik</h2>
-<h3>Kraftsensoren</h3>
-<p>Die Sensoren beruhen auf einer sogenannten
-<a href="https://en.wikipedia.org/wiki/Wheatstone_bridge">Wheatstone-Bridge</a>, sie
-erlaubt das Messen und dann Digitalisieren minimaler Änderungen von
-Widerständen. Dazu werden 3 konstante (S1-3) und ein variabler (S4) Widerstand
-in einer Raute zusammengeschaltet. Die minimale Änderung des einen Wiederstands
-ruft eine Änderung des Potentials zwischen den linken und rechten Polen aus,
-eine Spannung, die sich verstärken und dann digitalisieren lässt:</p>
-<p><img src="hx-711_wheatstone-bridge.jpg" alt="Wheatstone-Bridge"></p>
-<p>Der Verstärker ist ein HX-711, er braucht auf der Arduino-Seite PWM-fähige
-Eingänge:</p>
-<p><img src="hx-711_connection.jpg" alt="HX-711"></p>
-<p>Die Sensoren kommen mit drei Anschlüssen und enthalten nur 2 der 4 nötigen
-Widerstände:</p>
-<p><img src="hx-711_sensor.png" alt="Sensor"></p>
-<h3>Bluetooth</h3>
-<p>Die Bluetooth-Lösung ist etwas... gewalttätig. Wenn man sich klar macht, welche
-Prozessorleistung nötig ist, um Bluetooth umzusetzen und was ein Arduino
-vermag, passt beides im Grunde nicht zusammen. Da heute auch performante
-Prozessoren billig und stromsparend sind, gibt es für den Arduino
-Erweiterungen, die die gesamte Bluetooth-Thematik erledigen. Vermutlich steckt
-auf der Platine ein ARM Prozessor (ein kleiner Bruder dessen, was wie in
-unseren Smartphones haben) neben dem primitiven Prozessor des Arduino. Die
-Verdrahtung ist also vergleichsweise einfach, Masse, Power, In und Out (4
-Kabel):</p>
-<p><img src="hc-06_connection.jpg" alt="HC-06"></p>
-<h3>Temperatur</h3>
-<p>Der Arduino ist mit Bluetooth und zwei Kraftsensoren ausgereizt. Er besitzt nur
-6 PWM fähige Pins (wenn man den USB-Anschluss zum Debuggen nicht verlieren
-will) und jeweils zwei werden pro Komponente benötigt. Nur für einfache D/A
-Wandlung sind weitere Pins verfügbar.</p>
-<p>Es ist also Platz, zB auch die Temperatur zu messen (da es so simpel ist),
-hierfür gibt es Bauteile (LM-35, weniger als 1€), die dies recht einfach mit
-dem Arduino vermögen:</p>
-<p><img src="lm-35_connection.jpg" alt="LM-35"></p>
-<h2>Source-Code</h2>
-<p>Schliesslich müssen Programme entwickelt werden. Ein kleines Programm auf dem
-Arduino liest die Daten von den Sensoren und übergibt sie an die Komponente die
-diese per Bluetooth überträgt. Da Smartphones verfügbar und mobil sind, eignen
-sie sich am besten, um die Daten empfangen. Die beste Möglichkeit ist eine
-Android-App, die Entwicklung für IOS ist zu aufwendig und andere Systeme zu
-wenig verbreitet.</p>
-<h3>Arduino-Programm</h3>
-<p>Das Programm für den Arduino ist übersichtlich. Von Debug-Statements und
-Kommentaren befreit sind es nur ein paar Zeilen:</p>
-<pre><code>#include "HX711.h"
-#include &lt;SoftwareSerial.h&gt;
-
-SoftwareSerial BT(11, 3);
-HX711 LoadCell_1;
-HX711 LoadCell_2;
-static const unsigned long min_wait = 3L;
-static const unsigned long frequency = 5L;
-
-void setup() {
-    BT.begin(9600);
-    LoadCell_1.begin(9, 10);
-
-    LoadCell_1.set_scale(2280.f);
-    LoadCell_1.tare();
-    LoadCell_2.begin(5, 6);
-    LoadCell_2.set_scale(2280.f);
-    LoadCell_2.tare();
-    BT.println();
-    BT.println("tick;tock;left;right");
-}
-
-void loop() {
-    unsigned long tick = millis();
-    delay(1000 / frequency / 2);
-    digitalWrite(13, HIGH);
-    float current_millis=0;
-    float tock=millis();
-    float left_force=0;
-    float right_force=0;
-    current_millis = tick / 1000.0;
-    left_force = LoadCell_1.get_units();
-    right_force = LoadCell_2.get_units();
-    tock = (millis() - tock) / 1000.0;
-    BT.print(current_millis, 3);
-    BT.print(";");
-    BT.print(tock, 3);
-    BT.print(";");
-    BT.print(left_force, 1);
-    BT.print(";");
-    BT.print(right_force, 1);
-    BT.println();
-    digitalWrite(13, LOW);
-    tick += 1000L / frequency - min_wait;
-    while (millis() &lt; tick) {
-        delay(min_wait);
-    }
-}
+<h3>Video</h3>
+<p>Meine Idee war, dem Reiter die Möglichkeit zu geben, nach dem Ritte seine
+Zügelhandhabung zu reflektieren. Lediglich die Kurven zu betrachten ist
+natürlich recht sinnlos, weil man den Moment in dem die Hilfe genutzt
+wurde nicht mehr korrelieren kann.</p>
+<p>Ich will darum mit den Kräften ein Video aufzeichnen und die
+Kraft-Anzeige direkt in das Video einspielen.</p>
+<h3>Pieper</h3>
+<p>Eine Bekannte (Ulrika, danke!), ihres Zeichens Reitlehrerin allerdings
+fand die Idee, den Ritt nach dem eigentlichen Reiten zu besprechen
+unrealistisch, weil dafür mit den Reitschülern selten die Zeit ist. Sie
+hat die Vorstellung, dass direkt beim Ritte zu große Kräfte durch
+Piepsen angezeigt werden.</p>
+<p>Die App kann das leicht tun, also entwickelte ich ein Regelsystem,
+nachdem die App bestimmt, wann gepiepst werden soll. Es beruht auf einem
+Punktesystem, dass die Kraft über die Zeit integriert. Kurze hohe Kräfte
+aber auch lange mittlere Kräfte werden so abgepiepst.</p>
+<h3>Nachbearbeitung</h3>
+<p>Zur schnellen Darstellung verwende ich <code>gnuplot</code>. Mit wenigen Befehlen
+können die Punkte angezeigt werden:</p>
+<pre><code>gnuplot&gt; set autoscale fix
+gnuplot&gt; set key left Left
+gnuplot&gt; set offset 0,0,.5,.5
+gnuplot&gt; set style data line
+gnuplot&gt; stats '2018-04-14-14-53-39-44.tsv' index 0 using 5 prefix "L"
+gnuplot&gt; stats '2018-04-14-14-53-39-44.tsv' index 0 using 6 prefix "R"
+gnuplot&gt; plot '2018-04-14-14-53-39-44.tsv' index 0 using 5 title "Left", '2018-04-14-14-53-39-44.tsv' index 0 using 6 title "Right"
 </code></pre>
-<h3>Android-App</h3>
-<p>Die Android-App zeigt die beiden Zügelkräfte in grün/gelb/roten Balken an (wie
-das Logo der App, siehe oben). Sie kann sich bereits zum Mess-Adapter
-verbinden, zeigt die Werte mithilfe der Balken an, zeichnet aber noch nicht
-auf. Auch ein synchrones Video ist noch nicht enthalten.</p>
-<p>Der Sourcecode für die App (und das Arduino-Programm) wird auf Github unter
-<a href="https://github.com/emdete/biikuta">biikuta</a> veröffentlicht.</p>
+<p>Auch eine Tabellenkalkulation (<code>libreoffice</code>, ...) kann genutzt werden,
+solche Programme sind mit der Datenmenge aber schnell überfordert.
+Ansonsten ist <code>R</code> eine gute Möglichkeit mit den Daten "zu spielen".</p>
+<h3>Mehr Messwerte</h3>
+<p>Weitere Messwerte zeitgleich zu Erfassen könnte weitere Aufschlüsse
+geben (vom Puls könnte auf den Stressfaktor des Pferdes geschlossen
+werden):</p>
+<ul>
+<li>Schenkelkräfte</li>
+<li>Gewichtseinwirkung</li>
+<li>Kraft auf den Nasenriemen</li>
+<li>Puls</li>
+</ul>
+<p>Auch könnten (wenn es kein Video gibt) per Knöpfe in der App Werte
+manuell erfasst werden wie zum Beispiel die Gangart oder andere
+Ereignisse.</p>
 <h2>Rückschläge</h2>
+<h3>Löten</h3>
 <p>Kalte Lötstellen sind das größte Problem: Man sieht sie nicht und sie lauern
 irgendwo in der Schaltung. Am Ende lötet man alle Stellen erneut und erzeugt
 dabei schlimmstenfalls eine Neue. Obwohl die Schaltung simpel ist und die
 Komponenten für Bluetooth und Signalverstärkung auf jeweils einer Platine
 integriert sind, kommen bei dem Projekt bereits leicht 100 Lötstellen zusammen.</p>
+<h3>Übergangswiderstände</h3>
 <p>Es stellt sich heraus, daß die Steckverbindung keine gute Idee es, der Kontakt
 ist scheinbar nicht gut genug. Die Messung wird durch den Übergangs-Widerstand
-beeinflusst.</p>
+beeinflusst. Sie mussten entfernt und alles neu gelötet werden.</p>
+<h3>Einsatz am Pferd</h3>
+<p>Nach ein paar Einsätzen am Pferd sind die Sensoren defekt. Ein Blick
+hinter die (Leder-)Kulissen zeigt, dass die Kabel aus der Zugentlastung
+gerissen sind und beide weissen Kabel getrennt sind.</p>
+<p><a href="IMG_20180419_164508.jpg"><img src="IMG_20180419_164508.jpg" alt="Defekte"></a></p>
 <h2>Verweise</h2>
 <h3>Zack!</h3>
 <p>Eine einmalige Messhilfe bietet
 <a href="http://www.swingtree.de/index.php?mp=50&amp;aktion=zack&amp;lk=de">Swingtree</a>:</p>
 <p><a href="IMG_20180408_194555.jpg"><img src="IMG_20180408_194555.jpg" alt="Zack!"></a></p>
 <p>Die Messtreifen sind allerdings zerstört, wenn die Kraft einmalig überschritten
-wurde und kostet sommit ca 60¢.</p>
+wurde und kostet pro Messung somit ca 60¢.</p>
 <h3>Pferdeheilkunde 22 (2006)</h3>
 <p>Folgenden Artikel fand ich zum Thema: <a href="20060512.pdf">Der Einfluss von Zügel und
 Gebiss...</a>.</p>
 <h3>Patent (2008)</h3>
 <p>Die naheliegende Idee, Zügelkräfte zu messen, die Daten per Funk zu Übertragen
-und auch weitere Messwerte (Schenkelkräfte, Gewichtseinwirkung, Kraft auf den
-Nasenriemen, Puls, ...) einzubeziehen lies sich am 31. März 2010 bereits Heinz
+und auch weitere Messwerte einzubeziehen liess sich am 31. März 2010 bereits Heinz
 Gross unter <a href="https://www.google.com/patents/DE202010000515U1">DE202010000515U1</a>
 patentieren. Anmeldender Anwalt war damals Jochen Hansen von <a href="http://www.patent-marke-design.de/">Kanzlei
 HQuadrat</a>. Eine Nähe zu meiner Idee ist
@@ -401,15 +456,16 @@ nicht mehr patentierbar.</p>
 Pferden</a>
 vom 15. Februar 2015. Auch hier werden aber Biegesensoren eingesetzt. Darin
 erwähnen sie eine Zügelmessung die 10 Jahre vorher stattgefunden hat, also weit
-vor dem Patenteintrag.</p>
+vor dem Patenteintrag - sollten also die Messsensoren als äquivalent angesehen
+werden, war aus diesem Grunde schon die Idee nicht mehr patentierbar.</p>
 <h3>Horsica (2017)</h3>
-<p>Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel allerdings
-am statischen Objekt vorgenommen wurden. Leider habe ich keinen konkreten
-Kontakt.</p>
+<p>Auf der Horsica gab es einen Stand, an dem Kraftmessungen am Zügel
+allerdings analog und am statischen Objekt vorgenommen wurden. Leider
+habe ich keinen konkreten Kontakt.</p>
 <h3>Bachelor (2017)</h3>
 <p>Eine Studentin aus Bremen sucht für ihre Forschung Reiter, auch sie will
 Zügelkräfte messen.</p>
-<p><a href="29750049_1858234934228952_7934824769735945477_o.jpg"><img src="29750049_1858234934228952_7934824769735945477_o.jpg" alt="Zack!"></a></p>
+<p><a href="29750049_1858234934228952_7934824769735945477_o.jpg"><img src="29750049_1858234934228952_7934824769735945477_o.jpg" alt="Bachelor"></a></p>
 <h2>Urheber</h2>
 <p><img src="michael.dietrich.jpg" alt="Bild Michael Dietrich"></p>
 <p>Michael Dietrich setzt diese Idee um, dieser Blogeintrag wurde am 10. Dezember

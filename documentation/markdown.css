@@ -2,12 +2,13 @@ body {
 	background-color:#eee;
 	color:#222;
 	font-family:sans-serif;
+	margin: 0;
 	}
 #content {
-	width: 72ex;
+	width: 100ex;
 	}
 #license {
-	width: 72ex;
+	width: 100ex;
 	background-color:#ccc;
 	text-align:left;
 	padding: 12px;
@@ -16,25 +17,40 @@ h1, h2, h3, h4, h5 {
 	text-align:left;
 	background-color:#ccc;
 	color: #555;
-	margin-top: 1em;
-	padding: 12px;
+	padding: 1em;
 	}
 h1 {
+	margin-top: 2em;
 	font-family:sans-serif;
 	height: 74px;
 	line-height: 76px;
 	font-weight: bold;
 	color: #555;
 	}
+h2 {
+	margin-top: 3em;
+	}
 p, div, pre, td {
 	font-family:sans-serif;
 	text-align:left;
 	}
 p > img {
-	width: 72ex;
+	width: 100ex;
 	}
 a > img {
-	width: 72ex;
+	width: 100ex;
+	}
+code {
+	background-color: #feb;
+	}
+pre {
+	background-color: #feb;
+	padding: 1ex;
+	}
+blockquote {
+	background-color: #feb;
+	padding: 1ex;
+	font-style: italic;
 	}
 table {
 	border-collapse:collapse;
@@ -47,7 +63,7 @@ th {
 	background-color:#f8f8f8;
 	border:thin solid #ddd;
 	empty-cells:show;
-	text-align:right;
+	text-align: left;
 	vertical-align: top;
 	}
 td {

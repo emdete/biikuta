@@ -98,6 +98,9 @@ void loop() {
 		Serial.print(left_force, 1);
 		Serial.print(separator);
 		Serial.print(right_force, 1);
+    Serial.print(separator);
+    if (left_force != .0)
+      Serial.print(right_force/left_force, 5);
 		Serial.println();
 	}
 	if (1) {

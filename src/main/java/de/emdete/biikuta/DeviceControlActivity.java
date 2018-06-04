@@ -42,8 +42,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 	private SQLiteOpenHelper dbHelper = null;
 	private String deviceName = null;
 	private boolean pendingRequestEnableBt = false;
-	private double left_force_max = 3000;
-	private double right_force_max = 3000;
+	private double force_max = 3000;
 	private Vibrator vibrator = null;
 	private ToneGenerator toneGenerator = null;
 	private long lastBeep = -1l;
@@ -283,8 +282,7 @@ public final class DeviceControlActivity extends Activity implements Constants {
 				final Intent intent = new Intent(Intent.ACTION_SEND);
 				intent.setType("text/plain");
 				intent.putExtra(Intent.EXTRA_TEXT, "current max: "
-					+ "left_force_max=" + left_force_max/1000 + "kg, "
-					+ "right_force_max=" + right_force_max/1000 + "kg"
+					+ "force_max=" + force_max/1000 + "kg"
 					);
 				startActivity(Intent.createChooser(intent, getString(R.string.menu_send)));
 				return true;
@@ -357,12 +355,12 @@ public final class DeviceControlActivity extends Activity implements Constants {
 		//U.info("receivedMessage: " + message);
 		try {
 			Measurement val = new Measurement(message);
-			if (left_force_max < val.left_force)
-				left_force_max = val.left_force;
-			if (right_force_max < val.right_force)
-				right_force_max = val.right_force;
-			left_measure.setPercentage(val.left_force / left_force_max * 100);
-			right_measure.setPercentage(val.right_force / right_force_max * 100);
+			if (force_max < val.left_force)
+				force_max = val.left_force;
+			if (force_max < val.right_force)
+				force_max = val.right_force;
+			left_measure.setPercentage(val.left_force / force_max * 100);
+			right_measure.setPercentage(val.right_force / force_max * 100);
 			playSound(Math.max(val.left_force, val.right_force));
 			val.insert(dbHelper.getWritableDatabase());
 		}

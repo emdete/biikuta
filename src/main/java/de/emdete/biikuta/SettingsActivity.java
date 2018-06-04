@@ -32,7 +32,7 @@ public final class SettingsActivity extends PreferenceActivity implements Shared
 		}
 	}
 
-	@Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String value) {
-		U.info("sharedPreferences=" + sharedPreferences + ", value=" + value);
+	@Override public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		U.info("sharedPreferences=" + sharedPreferences + ", key=" + key + ", value=" + sharedPreferences.getString(key, null));
 	}
 }

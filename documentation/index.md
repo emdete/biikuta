@@ -365,7 +365,9 @@ gnuplot> plot '2018-04-14-14-53-39-44.tsv' index 0 using 5 title "Left", '2018-0
 
 Auch eine Tabellenkalkulation (`libreoffice`, ...) kann genutzt werden,
 solche Programme sind mit der Datenmenge aber schnell überfordert.
-Ansonsten ist `R` eine gute Möglichkeit mit den Daten "zu spielen".
+Ansonsten ist [R](https://www.r-project.org/) order
+[Root](https://root.cern.ch/) eine gute Möglichkeit mit vielen Daten "zu
+spielen".
 
 ### Mehr Messwerte
 
@@ -436,6 +438,8 @@ Kostenoptimimierung. Mit meiner Veröffentlichung ist nun übrigens mein Idee
 nicht mehr patentierbar.
 
 ### Cavallo (2015)
+
+[![CAV-Zügelspannung](CAV-Zuegelspannung-LIR6808.jpg)](CAV-Zuegelspannung-LIR6808.jpg)
 
 Auch die Zeitschrift Cavallo nutzt in einem Bericht eine ähnliche Apparatur:
 [Zügel-Messung mit drei

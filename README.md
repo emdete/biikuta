@@ -27,5 +27,8 @@ bekommen.
 
 ![Fertiges Modell](documentation/IMG_20180213_164304.jpg)
 
-Alle Details der Umsetzung sind [hier](documentation/index.html) nachzulesen.
+Alle Details der Umsetzung sind [hier](documentation/) nachzulesen.
 
+## Kontakt
+
+Wer Interesse hat, kann direkt mir mir [Kontakt](mailto:biikuta@emdete.de) aufnehmen.
